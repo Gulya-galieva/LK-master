@@ -1,0 +1,35 @@
+﻿@page
+@model NewMounterAccount.Pages.PUModel
+@{
+    ViewData["Title"] = "Проверка ПУ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Проверка ПУ</h2>
+<div class="row">
+    <label for="NetRegionId">Выберите РЭС</label>
+    @Html.DropDownList("NetRegionID", Model.NetRegions as SelectList, new { @class = "form-control", @autocomplete = "on", @required = "true", @onchange = "GetSubstations()" })
+</div>
+<div id="substationSelect">
+
+</div>
+
+<script>
+    function GetSubstations() {
+        var xhr = new XMLHttpRequest();
+        var body = "netRegionId=" + encodeURIComponent($('#NetRegionID').val());
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#substationSelect').html(xhr.response);
+            }
+        }
+        xhr.open("POST", '/KdeCheck/GetSubstations', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function OpenSubstation() {
+        window.location.href = '/CheckPU/Substation/' + $('#SubstationId').val();
+    }
+</script>
+

@@ -1,0 +1,150 @@
+﻿
+@{
+    ViewData["Title"] = "Статистика";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link href="~/lib/air-datepicker/dist/css/datepicker.css" rel="stylesheet" type="text/css" />
+<script src="~/lib/air-datepicker/dist/js/datepicker.js"></script>
+
+<h2>Статистика по монтажникам</h2>
+<label for="WorkerId">Выберите монтажника</label>
+@Html.DropDownList("WorkerId", ViewBag.Mounters as SelectList, new { @class = "form-control", @onchange = "GetMounterReport(); WorkerChanged()", @form = "formByDate" })
+<div id="reportButton">
+    <div class="d-flex mt-2">
+        <div class="ml-auto">
+            <button id="openModalButton" class="btn btn-primary">Отчет по датам</button>
+        </div>
+    </div>
+</div>
+<div class="loader" id="loading"></div>
+<div id="mounterReport">
+
+</div>
+
+<!-- Модальное окно выбора отчета -->
+<div class="modal fade" id="workerReportModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Добавление потребителя</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="col-md-12" id="reportParams">
+                        <label for="dates">Диапозон дат для формирования отчета</label>
+                        <input type="text" form="formByDate" data-range="true" data-multiple-dates-separator="-" class="form-control datepicker-here" id="dates" name="dates" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                @*<button class="btn btn-primary" onclick="GenerateReportByDate()">Сформировать</button>*@
+                <form action="/Home/WorkerReportByDate" id="formByDate" autocomplete="off" onsubmit=" CloseModal('workerReportModal')">
+                    <input type="submit" class="btn btn-primary" value="Сформировать" />
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script>
+    $(document).ready(function () {
+        $('#loading').hide();
+        $('#reportButton').hide();
+
+    });
+
+    $('#openModalButton').click(function () {
+        $("#workerReportModal").modal('toggle');
+    })
+
+    function WorkerChanged() {
+        if ($('#WorkerId').val() === 0) {
+            $('#reportButton').fadeOut();
+        }
+        else {
+            $('#reportButton').fadeIn();
+            $('#exampleModalLongTitle').html('Отчет по работнику: ' + $("#WorkerId :selected").html());
+        }
+    }
+
+    function GetMounterReport() {
+        $('#loading').fadeIn();
+        var xhr = new XMLHttpRequest($('#WorkerId').val());
+        var body = "workerId=" + encodeURIComponent($('#WorkerId').val());
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#mounterReport').html(xhr.response);
+                $('#loading').fadeOut();
+            }
+        }
+        xhr.open("POST", '/Home/MounterStat', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function CloseModal(element) {
+        $("#" + element).modal('toggle');
+    }
+
+    //Блокировка/разблокировка выдачи сотруднику
+    function ChangeDeliveryState(workerId) {
+        var xhr = new XMLHttpRequest($('#WorkerId').val());
+        var state;
+        if (document.getElementById("DeliveryAvaliable").checked)
+            state = true;
+        else state = false;
+
+        var body = "workerId=" + encodeURIComponent(workerId) + "&state=" + encodeURIComponent(state);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                alert(xhr.responseText);
+            }
+        }
+        xhr.open("POST", '/Home/ChangeDeliveryState', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function GenerateReportByDate() {
+        var xhr = new XMLHttpRequest();
+        var body = "workerId=" + encodeURIComponent($('#WorkerId').val()) + "&dates=" + encodeURIComponent($('#reportByDateParams').val());
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                LoadDocument(xhr);
+            }
+        }
+        xhr.open("POST", '/Home/WorkerReportByDate', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function LoadDocument(xhr) {
+        if (xhr.status == 200) {
+            // Create a new Blob object using the
+            //response data of the onload object
+            var blob = new Blob([xhr.response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            //Create a link element, hide it, direct
+            //it towards the blob, and then 'click' it programatically
+            let a = document.createElement("a");
+            a.style = "display: none";
+            document.body.appendChild(a);
+            //Create a DOMString representing the blob
+            //and point the link element towards it
+            let url = window.URL.createObjectURL(blob);
+            a.href = url;
+            a.download = $('#reportByDateParams').val() + '.xlsx';
+            //programatically click the link to trigger the download
+            a.click();
+            //release the reference to the file by revoking the Object URL
+            window.URL.revokeObjectURL(url);
+        } else {
+        }
+    };
+</script>

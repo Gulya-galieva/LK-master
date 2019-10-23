@@ -1,0 +1,256 @@
+﻿@model DbManager.UnmountReport
+@{
+    ViewData["Title"] = "Демонтаж";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+   
+}
+<link href="~/lib/air-datepicker/dist/css/datepicker.css" rel="stylesheet" type="text/css" />
+<script src="~/lib/air-datepicker/dist/js/datepicker.js"></script>
+
+<h2>Отчет по демонтажу оборудования</h2>
+<div id="accordion">
+    <h3>Параметры отчета</h3>
+    <div>
+        <form action="/Report/SaveUnmountReport" method="post" id="form1">
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="date">Дата</label>
+                    <input type='text' autocomplete="off" id="date" name="date" class='datepicker-here form-control' required />
+                </div>
+
+
+            </div>
+            @if (User.IsInRole("mounter"))
+            {
+                <div class="text-right">
+                    <input type="hidden" form="form1" name="ContractId" value="@ViewBag.Contract.Id" />
+                    <input type="hidden" form="form1" name="Id" value="@Model.Id" />
+                    <input type="hidden" form="form1" name="NetRegionId" value="@ViewBag.NetRegion.Id" />
+                    @if (Model.Id == 0)
+                    {
+                        <input type="submit" id="submitButton" form="form1" class="btn btn-primary" value="Сохранить" />
+                    }
+                </div>
+            }
+        </form>
+    </div>
+</div>
+@if (Model.Id != 0)
+{
+    <div id="commentsAccordion">
+        <h3>Комментарии</h3>
+        <div>
+            <div class="form-row mb-3">
+                <textarea class="form-control mb-2" rows="2" id="text"></textarea>
+                <button class="btn btn-primary ml-auto" onclick="Addcoment(@Model.Id, 'Демонтаж')">Отправить</button>
+            </div>
+            <div id="commentsTable">
+                @await Html.PartialAsync("~/Views/Report/_comments.cshtml", (List<DbManager.ReportComment>)ViewBag.Comments)
+            </div>
+        </div>
+    </div>
+
+    @if (((List<DbManager.ReportRemark>)ViewBag.Remarks).Count > 0)
+    {
+        <div class="card mt-3">
+            <div class="card-header">
+                Замечания
+            </div>
+            <div id="remarksAccordion">
+                @{
+                    int count = 1;
+                    foreach (DbManager.ReportRemark remark in ViewBag.Remarks)
+                    {
+                        <h3>Замечание №@count от @remark.User.Name</h3>
+                        <div>
+                            @remark.Text
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
+
+    <div id="deviceTable">
+        @await Html.PartialAsync("~/Views/Report/Unmount/_UnmountedDevices.cshtml", (List<NewMounterAccount.Models.UnmountedDeviceModel>)ViewBag.UnmountedDevices)
+    </div>
+
+    <div class="modal fade" id="addPU" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Демонтаж оборудования</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-row">
+                        <label for="serial">Заводской номер</label>
+                        <input type="text" class="form-control" id="serial" name="serial" onchange="CheckPU()" required />
+                    </div>
+                    <div class="form-row">
+                        <label for="reason">Причина демонтажа</label>
+                        <input type="text" class="form-control" id="reason" name="reason" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="AddPu()">Сохранить</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="sendToCurator" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Отправка отчета кратору</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+
+                <div class="modal-body">
+                    <div class="form-row">
+                        <label for="UserId">Выберите куратора</label>
+                        @Html.DropDownList("UserId", ViewBag.Curators as SelectList, new { @class = "form-control" })
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="SendReport()">Отправить</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+
+     $(document).ready(function () {
+        if ("@Model.Id" === "0") {
+            var date = new Date();
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+
+            if (day.toString().length === 1)
+                day = "0" + day;
+            if (month.toString().length === 1)
+                month = "0" + month;
+            $('#date').val(day + '.' + month + '.' + date.getFullYear());
+
+        }
+        else {
+            $('#date').val("@Html.Raw(Model.Date.ToShortDateString())");
+
+        }
+    });
+
+    $(function () {
+        $("#accordion").accordion({
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+    });
+
+    $(function () {
+        $("#remarksAccordion").accordion({
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+    });
+
+    $("#commentsAccordion").accordion({
+        collapsible: true,
+        heightStyle: "content",
+        active: false
+    });
+
+    $('#date').datepicker({
+        startDate: new Date(),
+        maxDate: new Date()
+    });
+
+    function Addcoment(reportId, reportType) {
+        var xhr = new XMLHttpRequest();
+        var text = $('#text').val();
+        var body = "reportId=" + encodeURIComponent(reportId) + "&reportType=" + encodeURIComponent(reportType) + "&text=" + encodeURIComponent(text);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#commentsTable').html(xhr.response);
+                $('#text').val('');
+            }
+        }
+        xhr.open("POST", '/Report/AddComment', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function CheckPU() {
+        var xhr = new XMLHttpRequest();
+        var serial = $('#serial').val();
+        var body = "serial=" + encodeURIComponent(serial);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                if (xhr.responseText.length > 0) {
+                    alert(xhr.responseText);
+                    $('#serial').val('');
+                }
+            }
+        }
+        xhr.open("POST", '/Report/CheckUnmountedDevice', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function AddPu(){
+        var xhr = new XMLHttpRequest();
+        var serial = $('#serial').val();
+        var reason = $('#reason').val();
+        var body = "serial=" + encodeURIComponent(serial) + "&reason=" + encodeURIComponent(reason) + "&reportId=" + encodeURIComponent(@Model.Id);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#addPU').modal('toggle');
+                $('#deviceTable').html(xhr.response);
+            }
+        }
+        xhr.open("POST", '/Report/AddUnmountedDevice', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function DeletePU(id) {
+        var xhr = new XMLHttpRequest();
+        var body = "id=" + encodeURIComponent(id);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#deviceTable').html(xhr.response);
+            }
+        }
+        xhr.open("POST", '/Report/DeleteUnmountedDevice', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function SendReport() {
+        $('#sendToCurator').modal('toggle');
+        var xhr = new XMLHttpRequest();
+        var body = "id=" + encodeURIComponent(@Model.Id) + "&curatorId=" + encodeURIComponent($('#UserId').val());
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                alert(xhr.responseText);
+            }
+        }
+
+        xhr.open("POST", '/Report/SendUnmountReport', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+</script>

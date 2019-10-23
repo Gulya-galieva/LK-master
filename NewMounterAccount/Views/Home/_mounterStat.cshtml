@@ -1,0 +1,124 @@
+﻿@model NewMounterAccount.Models.MounterReportModel;
+@if (User.IsInRole("mounter"))
+{
+<h2>Полученное оборудование и материалы</h2>
+}
+@if (Model != null)
+{
+<div id="InnerTable">
+
+    <h4 class="border-bottom border-gray pb-2 mb-0">Статистика</h4>
+    <div class="card-deck mb-3 text-center">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Получено</h4>
+            </div>
+            <div class="card-body">
+                <h1 class="card-title pricing-card-title">@ViewBag.totalCount</h1>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">В работе</h4>
+            </div>
+            <div class="card-body">
+                <h1 class="card-title pricing-card-title">@ViewBag.inWork</h1>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Установлено</h4>
+            </div>
+            <div class="card-body">
+                <h1 class="card-title pricing-card-title">@ViewBag.mounted</h1>
+            </div>
+        </div>
+    </div>
+
+    <h5>@ViewData["error"]</h5>
+    @if (User.IsInRole("engineer"))
+    {
+        <div>
+            <label for="DeliveryAvaliable">Получение оборудования и материалов</label>
+            @Html.CheckBox("DeliveryAvaliable", false, new {  @onchange="ChangeDeliveryState("+Model.WorkerId+")" })
+        </div>
+    }
+
+    <h6 style="color:#ff0000">@ViewData["error"]</h6>
+    @if (ViewBag.inWork > 0)
+    {
+        <h6>Оборудование в работе</h6>
+        <table class="table table-sm table-bordered table-hover">
+            <thead>
+                <tr style="background:#EEF3F6">
+                    <th>#</th>
+                    <th>Наименование</th>
+                    <th>Заводской номер</th>
+                    <th>Дата получения</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null)
+                {
+                    int n = 1;
+
+
+                    @foreach (var item in Model.WorkerDevices)
+                    {
+                        <tr style="background:@item.RowColorCode;">
+                            <td>@n</td>
+                            <td>@item.DeviceType</td>
+                            <td>@item.Serial</td>
+                            <td>@item.Date.ToShortDateString()</td>
+                        </tr>
+                        n++;
+                    }
+                }
+            </tbody>
+        </table>
+    }
+    <h6>Полученные материалы</h6>
+    <table class="table table-sm table-bordered table-hover">
+        <thead>
+            <tr style="background:#EEF3F6">
+                <th>#</th>
+                <th>Наименование</th>
+                <th>Ед. изм</th>
+                <th>Кол-во</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null)
+            {
+                int n = 1;
+                @foreach (var item in Model.WorkerMaterials)
+                {
+                    <tr>
+                        <td>@n</td>
+                        <td>@item.Name</td>
+                        <td>@item.Unit</td>
+                        <td>@item.Volume.ToString("0.00")</td>
+
+                    </tr>
+                    n++;
+                }
+
+            }
+        </tbody>
+    </table>
+</div>
+}
+@if (User.IsInRole("engineer"))
+{
+    <script>
+        if ("@Model.DeliveryAvailible" === "True")
+            document.getElementById("DeliveryAvaliable").checked = true;
+    </script>
+}
+<script>
+    $(document).ready(function () {
+        $('#Loading').fadeOut();
+    });
+</script>

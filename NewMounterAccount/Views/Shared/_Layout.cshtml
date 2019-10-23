@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+
+    <script src="~/lib/jquery/jquery-3.3.1.min.js"></script>
+    <script src="~/lib/jquery-ui-1.12.1/jquery-ui.js"></script>
+
+    <link href="~/lib/jquery-ui-1.12.1/jquery-ui.css" rel="stylesheet" />
+    <link href="~/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
+    <link href="~/lib/css/cardStyle.css" rel="stylesheet" />
+
+
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="~/lib/ajaxJq/jquery.unobtrusive-ajax.js"></script>
+    <script src="~/lib/Font-Awesome/svg-with-js/js/fontawesome-all.js"></script>
+    <script src="~/lib/chart.js/dist/Chart.js"></script>
+
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <a class="navbar-brand" href="/Home/Index">Монтаж</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav mr-auto">
+
+                    <li class="nav-item ">
+                        <a class="nav-link" href="~/Home/Stat">
+                            <span class="button-icon">
+                                <i class="fa fa-toolbox"></i>
+                            </span>
+                            Статистика
+                        </a>
+                    </li>
+
+                    <li class="nav-item ">
+                        <a class="nav-link" href="~/KdeCheck/Check">
+                            <span class="button-icon">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </span>
+                            Выверка КДЕ
+                        </a>
+                    </li>
+                    <li class="nav-item ">
+                        <a class="nav-link" href="/CheckPU">
+                            <span class="button-icon">
+                                <i class="fas fa-check-double"></i>
+                            </span>
+                            Проверка ПУ
+                        </a>
+                    </li>
+
+                </ul>
+                <div class="nav navbar-nav navbar-right">
+                    <form action="/Search/SearchResults">
+                        <div class="input-group">
+                            <input class="form-control" name="query" type="search" placeholder="ТП/РП, № ПУ" aria-label="Search">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" type="submit" id="button-addon2">
+                                    <span>
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                </button>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+                <ul class="nav navbar-nav navbar-right">
+
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        string usName = "[" + User.Identity.Name + "]";
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">@usName</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Account/Logout">Выйти</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!--основной контент-->
+    <div class="container">
+        @RenderBody()
+    </div>
+    <footer class="fixed-bottom" style="background-color:#ffffff">
+        <hr />
+        <p>© 2018 - Тимур</p>
+    </footer>
+</body>
+</html>

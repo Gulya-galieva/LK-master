@@ -1,0 +1,49 @@
+﻿@model IEnumerable<ChekDbManager.CheckDataContext.Kde>
+@foreach (ChekDbManager.CheckDataContext.Kde kde in Model)
+{
+    string alertType = "";
+    bool empty = true;
+    @if(kde.Adresses.Count == 0)
+    {
+        alertType= "alert alert-success";
+       
+    }
+    else
+    {
+        empty = false;
+        alertType = "alert alert-secondary";
+    }
+
+    <div class='@Html.Raw(alertType)'>
+        <div class="d-flex">
+            <div class="mt-2">
+                <h6>
+                    @kde.KdeType.Name
+                </h6>
+            </div>
+            <div class="ml-auto">
+                @if (User.IsInRole("mounter") || User.IsInRole("engineer") || User.IsInRole("administrator"))
+                {
+                    if (empty)
+                    {
+                        <button class="btn btn-outline-success" onclick="OpenModal('@Html.Raw(kde.KdeType.Name)', @kde.Id)">Добавить потребителя</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-success" onclick="EditKde('@Html.Raw(kde.KdeType.Name)', @kde.Id)">Редактировать</button>
+                    }
+
+                    <button class="btn btn-outline-danger" onclick="DeleteKde(@kde.Id)">-</button>
+                }
+            </div>
+        </div>
+        <div>
+            <ul>
+                @foreach (ChekDbManager.CheckDataContext.Adress adress in kde.Adresses)
+                {
+                    <li>@adress.Local, ул. @adress.Street, д. @adress.House, корп. @adress.Building, кв. @adress.Flat</li>
+                }
+            </ul>
+        </div>
+    </div>
+}

@@ -1,0 +1,39 @@
+﻿@media print {
+    span {
+        display: none;
+    }
+
+    footer {
+        display: none;
+    }
+
+    html {
+        margin-top: 25px;
+        margin-bottom: 25px;
+    }
+
+    head {
+        display: none;
+    }
+
+    table {
+        border-color: #000000;
+    }
+
+    .table {
+        border-color: #000000;
+        margin-left: 10px;
+    }
+
+    .no-print {
+        display: none;
+    }
+
+    body {
+        font-family: Times, 'Times New Roman', serif; /* Шрифт с засечками */
+    }
+
+    h1, h2, p {
+        color: #000; /* Черный цвет текста */
+    }
+}

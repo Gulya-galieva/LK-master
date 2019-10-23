@@ -1,0 +1,15 @@
+﻿@using DbManager;
+@model MounterReportModel
+@using NewMounterAccount.Models;
+<link href="~/lib/css/print.css" rel="stylesheet" />
+@{
+    ViewData["Title"] = "Статистика";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="loader" id="Loading"></div>
+<div id="mouterReportTable">
+    @if (Model != null)
+    {
+        @await Html.PartialAsync("_mounterStat", Model)
+    }
+</div>

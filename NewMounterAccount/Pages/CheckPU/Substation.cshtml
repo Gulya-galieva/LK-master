@@ -1,0 +1,362 @@
+﻿@page "{id}"
+@model NewMounterAccount.Pages.CheckPU.SubstationModel
+@{
+    ViewData["Title"] = "Substation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>@Model.Substation.NetRegion.Name @Model.Substation.Name</h2>
+
+
+
+@if (User.IsInRole("engineer") || User.IsInRole("administrator") || User.IsInRole("curator"))
+{
+    <div id="accordion">
+        <h3>Последние действия</h3>
+        <div>
+            @foreach (var action in Model.Actions)
+            {
+                <p>@action.DateTime: @action.Name @action.ActionDone @action.Comment</p>
+            }
+        </div>
+    </div>
+}
+
+    
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex">
+            <div class="mt-2">
+                Список ПУ
+            </div>
+            <div class="ml-auto">
+                @if (User.IsInRole("mounter") || User.IsInRole("engineer") || User.IsInRole("administrator") )
+                {
+                    <button class="btn btn-outline-success" data-toggle="modal" data-target="#addPU" onclick="AddBtnClick()">
+                        Добавить ПУ
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div id="PUTable">
+               @await Html.PartialAsync("~/Views/PuCheck/_PU.cshtml", Model.Devices)
+        </div>
+        <div class="d-flex">
+            <div class="ml-auto">
+                @if (User.IsInRole("mounter") || User.IsInRole("engineer") || User.IsInRole("administrator"))
+                {
+                    <button class="btn btn-outline-success" data-toggle="modal" data-target="#addPU">
+                        Добавить ПУ
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addPU" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Добавление ПУ</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="adress" name="adress">
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label for="Local">Населеный пункт</label>
+                            <input type="text" class="form-control" id="Local" name="Local" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-3">
+                            <label for="Street">Улица</label>
+                            <input type="text" class="form-control" id="Street" name="Street" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="House">Дом</label>
+                            <input type="text" class="form-control" autocomplete="off" id="House" name="House" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="Building">Корпус</label>
+                            <input type="text" class="form-control" autocomplete="off" id="Building" name="Building">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="Flat">Квартира</label>
+                            <input type="text" class="form-control" autocomplete="off" id="Flat" name="Flat">
+                            <input type="hidden" name="SubstationId" value="@Model.Substation.Id" />
+                        </div>
+                    </div>
+                    @*</form>
+                            <br />
+                        <form id="device">*@
+                    <div class="form-row">
+                        <div class="col-md-3">
+                            <label for="OldKDESeal">Снятая пломба КДЕ</label>
+                            <input type="text" id="OldKDESeal" name="OldKDESeal" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="NewKDESeal">Новая пломба КДЕ</label>
+                            <input type="text" id="NewKDESeal" name="NewKDESeal" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="RedSticker">Красный стикер</label>
+                            <input type="text" id="RedSticker" name="RedSticker" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="BlueSeal">Синяя пломба</label>
+                            <input type="text" id="BlueSeal" name="BlueSeal" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+
+                        <div class="col-md-4">
+                            <label for="Serial">Заводской номер ПУ</label>
+                            <input type="text" id="Serial" name="Serial" onkeypress="DeviceType()" onchange="DeviceType()" class="form-control" required pattern="[0-9]{15}" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="DeviceSeal">Пломба ПУ</label>
+                            <input type="text" id="DeviceSeal" name="DeviceSeal" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="SideStickerState">Состояние бокового стикера</label>
+                            <select id="SideStickerState" name="SideStickerState" class="form-control">
+                                <option>Без повреждений</option>
+                                <option>Поврежден</option>
+                                <option>Отсутствует</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label for="readings">Показания ПУ</label>
+                    <div class="form-row" id="readings">
+                        <div class="col-md-4">
+                            <input type="text" id="Sum" placeholder="∑" name="Sum" onchange="DotReplace()" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" id="T1" placeholder="T1" name="T1" onchange="DotReplace()" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" id="T2" placeholder="T2" name="T2" onchange="DotReplace()" class="form-control" />
+                        </div>
+                    </div>
+
+                    <br />
+
+                    <label for="U">Напряжения по фазам</label>
+                    <div class="form-row" id="U">
+                        <div class="col-md-4">
+                            <input type="text" id="U1" name="U1" readonly placeholder="U1" onchange="DotReplace()" class="form-control" pattern="\d+(,\d{1,10})?" />
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" id="U2" name="U2" readonly placeholder="U2" onchange="DotReplace()" class="form-control" pattern="\d+(,\d{1,10})?" />
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" id="U3" name="U3" readonly placeholder="U3" onchange="DotReplace()" class="form-control" pattern="\d+(,\d{1,10})?" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-4">
+                            <label for="I0">P0</label>
+                            <input type="text" id="P0" name="P0" onchange="Delta()" readonly class="form-control" pattern="\d+(,\d{1,10})?" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="I1">P</label>
+                            <input type="text" id="P1" name="P1" onchange="Delta()" readonly class="form-control" pattern="\d+(,\d{1,10})?" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="delta">P-Po</label>
+                            <input type="text" id="delta" readonly class="form-control" />
+                        </div>
+                    </div>
+                </form>
+                <br />
+
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <label for="Comment">Комментарий</label>
+                        <input type="text" class="form-control" form="adress" autocomplete="off" id="Comment" name="Comment">
+                        <input type="hidden" id="AdressId" form="adress" />
+                        <input type="hidden" id="Id" name="Id" form="adress" />
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+               
+                <button class="btn btn-primary" id="addBtn" disabled>Добавить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+ 
+
+    $("#accordion").accordion({
+        collapsible: true,
+        heightStyle: "content",
+        active: false
+    });
+
+    function DeviceType() {
+        var serial = $('#Serial').val().toString();
+        if (serial.length === 15) {
+            if (serial.startsWith('009217') || serial.startsWith('008984') || serial.startsWith('011347') || serial.startsWith('009227') || serial.startsWith('011747') || serial.startsWith('011888') || serial.startsWith('011889') || serial.startsWith('009235')) { //если П 3ф
+                $('#U1').prop('readonly', false);
+                $('#U2').prop('readonly', false);
+                $('#U3').prop('readonly', false);
+                $('#P0').prop('readonly', false);
+                $('#P1').prop('readonly', false);
+                $('#addBtn').prop('disabled', false);
+            }
+            else { //если 1ф
+                $('#U1').prop('readonly', false);
+                $('#P0').prop('readonly', false);
+                $('#P1').prop('readonly', false);
+                $('#U2').prop('readonly', true);
+                $('#U3').prop('readonly', true);
+                $('#U2').val('');
+                $('#U3').val('');
+                $('#addBtn').prop('disabled', false);
+            }
+        }
+        else {
+            $('#U1').prop('readonly', true);
+            $('#U2').prop('readonly', true);
+            $('#U3').prop('readonly', true);
+            $('#P0').prop('readonly', true);
+            $('#P1').prop('readonly', true);
+            $('#U1').val('');
+            $('#U2').val('');
+            $('#U3').val('');
+            $('#addBtn').prop('disabled', true);
+        }
+    }
+
+    function AddDevice() {
+        var formData = new FormData(document.forms.adress)
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#PUTable').html(xhr.response);
+                $('#addPU').modal('toggle');
+            }
+       }
+        xhr.open("POST", '/PuCheck/AddDevice', true);
+        //xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(formData);
+    }
+
+    function EditDevice() {
+        var formData = new FormData(document.forms.adress)
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#PUTable').html(xhr.response);
+                $('#addPU').modal('toggle');
+            }
+        }
+        xhr.open("POST", '/PuCheck/EditDevice', true);
+        xhr.send(formData);
+    }
+
+    function DeleteDevice(id) {
+        var body = "deviceId=" + encodeURIComponent(id) + "&substationId=" + encodeURIComponent(@Model.Substation.Id);
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                
+                $('#PUTable').html(xhr.response);
+            }
+        }
+        xhr.open("POST", '/PuCheck/DeleteDevice', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function OpenDeviceForEdit(id) {
+        EditBtnClick(); 
+        var body = "deviceId=" + encodeURIComponent(id);
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var result = JSON.parse(xhr.responseText);
+
+                $('#addPU').modal('toggle');
+
+                $('#Local').val(result.Adress.Local);
+                $('#Street').val(result.Adress.Street);
+                $('#House').val(result.Adress.House);
+                $('#Building').val(result.Adress.Building);
+                $('#Flat').val(result.Adress.Flat);
+                $('#Comment').val(result.Adress.Comment);
+                $('#AdressId').val(result.Device.AdressId);
+
+                $('#Id').val(result.Device.Id);
+                $('#OldKDESeal').val(result.Device.OldKDESeal);
+                $('#NewKDESeal').val(result.Device.NewKDESeal);
+                $('#RedSticker').val(result.Device.RedSticker);
+                $('#BlueSeal').val(result.Device.BlueSeal);
+                $('#Serial').val(result.Device.Serial);
+                $('#DeviceSeal').val(result.Device.DviceSeal);
+                $('#SideStickerState').val(result.Device.SideStickerState);
+                $('#Sum').val(result.Device.Sum);
+                $('#T1').val(result.Device.T1);
+                $('#T2').val(result.Device.T2);
+                $('#U1').val(result.Device.U1);
+                $('#U2').val(result.Device.U2);
+                $('#U3').val(result.Device.U3);
+                $('#P0').val(result.Device.P0);
+                $('#P1').val(result.Device.P1);
+
+                DeviceType();
+                DotReplace();
+                Delta();
+            }
+        }
+        xhr.open("POST", '/PuCheck/OpenDeviceForEdit', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function DotReplace() {
+        $('#U1').val($('#U1').val().replace('.', ','));
+        $('#U2').val($('#U2').val().replace('.', ','));
+        $('#U3').val($('#U3').val().replace('.', ','));
+        $('#Sum').val($('#Sum').val().replace('.', ','));
+        $('#T1').val($('#T1').val().replace('.', ','));
+        $('#T2').val($('#T2').val().replace('.', ','));
+
+    }
+
+    function Delta() {
+        var P0 = $('#P0').val().replace(',', '.');
+        var P1 = $('#P1').val().replace(',', '.');
+        var delta = P1 - P0;
+        delta = delta.toFixed(3);
+        $('#delta').val(delta.toString());
+        $('#delta').val($('#delta').val().replace('.', ','));
+        $('#P0').val($('#P0').val().replace('.', ','));
+        $('#P1').val($('#P1').val().replace('.', ','));
+    }
+
+    function AddBtnClick() {
+        $("#addBtn").attr("onclick", "AddDevice()");
+        $("#addBtn").html("Добавить");
+    }
+
+    function EditBtnClick() {
+        $("#addBtn").attr("onclick", "EditDevice()");
+        $("#addBtn").html("Сохранить");
+    }
+</script>

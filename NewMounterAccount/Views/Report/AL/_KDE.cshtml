@@ -1,0 +1,26 @@
+﻿@model DbManager.KDE
+@{
+    bool mounter = User.IsInRole("mounter");
+}
+<div class="card" id="kde_@Model.Id">
+    <div class="card-header">
+        <div class="d-flex bd-highlight">
+            <div class="p-2 flex-grow-1 mt-2">
+                <h5>@Model.KDEType.Name</h5>
+            </div>
+            @if (mounter)
+            {
+                <div class="p-2">
+                    <button class="btn btn-outline-success" onmouseover="PuTableId(@Model.Id);KdeId(@Model.Id)" onclick="CheckKDE(@Model.Id)">Добавить ПУ</button>
+                </div>
+                <div class="p-2">
+                    <button class="btn btn-outline-danger" onclick="DeleteKde(@Model.Id)">-</button>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="card-body" id="puTable_@Model.Id">
+        @ViewData["error"]
+        @await Html.PartialAsync("~/Views/Report/AL/_PU.cshtml", Model.MounterReportUgesDeviceItems)
+    </div>
+</div>

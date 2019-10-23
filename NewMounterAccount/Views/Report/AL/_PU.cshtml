@@ -1,0 +1,68 @@
+﻿@model IEnumerable<MounterReportUgesDeviceItem>
+@using DbManager;
+@{
+    bool mounter = User.IsInRole("mounter");
+    int count = 1;
+}
+@foreach (MounterReportUgesDeviceItem item in Model)
+{
+    Device device = item.Device;
+<div class="d-flex">
+    <div class="p-2">
+
+        @if (item.PhoneNumber != null && item.PhoneNumber != "")
+        {
+            <p>
+                ПУ № @item.Serial ул.@item.Street, д.@item.House, корп.@item.Building, кв.@item.Flat № сим @item.PhoneNumber
+            </p>
+        }
+        else
+        {
+            <p>
+                ПУ № @item.Serial ул.@item.Street, д.@item.House, корп.@item.Building, кв.@item.Flat
+            </p>
+        }
+
+    </div>
+
+    @if (mounter)
+    {
+        <div class="ml-auto p-2">
+            <button class="btn btn-outline-success" onclick="AddAdditionalMaterialOpenModal(@item.Id, @item.KDEId)">Доп. материалы</button>
+        </div>
+        <div class="p-2">
+            <button class="btn btn-outline-primary" onclick="EditPU(@item.Id);  PuTableId(@item.KDEId)">
+                <span class="button-icon">
+                    <i class="fas fa-wrench"></i>
+                </span>
+            </button>
+        </div>
+        <div class="p-2">
+            <button class="btn btn-outline-danger" onclick="DeletePu(@item.Id, @item.KDEId)">-</button>
+        </div>
+    }
+</div>
+    @if (device.AdditionalMaterials.Count > 0)
+    {
+        <div class="p-2 bd-highlight">
+            <h6>Доп. материалы</h6>
+            @foreach (AdditionalMaterial material in device.AdditionalMaterials)
+            {
+            <ul>
+                <li>
+                    <div class="d-flex">
+                        <div class="p-2 mt-2">
+                            @material.Material.MaterialType.Name @material.Volume @material.Material.MaterialType.Unit.Name
+                        </div>
+
+                        <div class="p-2">
+                            <button class="btn btn-outline-danger" onclick="DeleteAdditionalMaterial(@material.Id, @item.KDEId)">-</button>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            }
+        </div>
+    
+}
+    }

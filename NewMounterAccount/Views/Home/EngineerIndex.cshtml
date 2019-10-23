@@ -1,0 +1,81 @@
+﻿@using NewMounterAccount.Models;
+@using DbManager;
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Главнвя страница";
+   
+ }
+<h2>@ViewBag.Name</h2>
+
+@{
+    List<CuratorCount> data = ((EngineerData)ViewBag.Data).CuratorCounts;
+    int count = data.Count();
+    int i = 0;
+}
+
+@while (i < count)
+{
+    <div class="card-deck mb-3 text-center">
+        @for (int j = 0; j < 3; j++)
+        {
+            var item = (CuratorCount)data[i];
+
+            <div class="card mb-4  box-shadow shadow">
+                <div class="card-header">
+                    <h4 class="my-0 font-weight-normal">@item.CuratorName</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Отчетов на проверку: @item.Recived</h5>
+                    <h5>Принято отчетов:  @item.Accepted</h5>
+                    @*<div style="height:100px"></div>
+                        <div class="btn-group flex-shrink-1 bd-highlight" role="group" aria-label="Basic example">
+                            <a href="/Curator/Reports/@item.CuratorId" class="btn btn-outline-primary" role="button" aria-pressed="true">Отчеты</a>
+                        </div>*@
+                </div>
+            </div>
+
+            i++;
+            if (i == count)
+            {
+                if (j == 0)
+                {
+                    <div class="card mb-4 empty-card">
+                    </div>
+                    <div class="card mb-4 empty-card">
+                    </div>
+                }
+                if (j == 1)
+                {
+                    <div class="card mb-4 empty-card">
+                    </div>
+                }
+                break;
+            }
+        }
+    </div>
+}
+
+<div id="graphs">
+    <div class="text-center">
+        <p>Загрузка статистики</p>
+        <div class="loader2" id="loading2"></div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+      
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#graphs').html(xhr.response);
+                $('#loading2').fadeOut();
+            }
+        }
+        xhr.open("POST", '/Home/GetGraphData', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send();
+
+    });
+</script>
+

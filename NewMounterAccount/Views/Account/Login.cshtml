@@ -1,0 +1,39 @@
+﻿@model NewMounterAccount.Models.LoginModel
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Signin</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="~/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="~/lib/bootstrap/dist/css/signin.css" rel="stylesheet">
+</head>
+
+<body class="text-center">
+   
+    <form class="form-signin" action="/Account/Login" asp-antiforgery="true" method="post">
+        <img class="mb-4" src="~/lib/Images/Курс монтаж.png" alt="" width="300">
+        <h5 class="h5 mb-3 font-weight-normal">Пожалуйста авторизуйтесь</h5>
+        <h5 class="h5 mb-3 font-weight-normal" style="color:#ff0000">@ViewData["Error"]</h5>
+        <div>
+            <label for="inputLogin" class="sr-only">Login</label>
+            <input type="text" id="inputLogin" name="Login" class="form-control" placeholder="Логин" required="" autofocus="">
+            <span asp-validation-for="Login" />
+        </div>
+        <div>
+            <label for="inputPassword" class="sr-only">Password</label>
+            <input type="password" id="inputPassword" name="Password" class="form-control" placeholder="Пароль" required="">
+            <span asp-validation-for="Password" />
+        </div>
+
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Войти</button>
+
+    </form>
+      
+
+
+</body>

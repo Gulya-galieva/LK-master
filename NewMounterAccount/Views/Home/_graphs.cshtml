@@ -1,0 +1,132 @@
+﻿@using NewMounterAccount.Models;
+@{
+  
+    List<MounterPUCount> chartData = ((EngineerData)ViewBag.Data).LkStat.MounterPUCounts;
+    var names = Newtonsoft.Json.JsonConvert.SerializeObject(chartData.Select(x => x.Name).ToList());
+    var totalCount = Newtonsoft.Json.JsonConvert.SerializeObject(chartData.Select(x => x.TotalCount).ToList());
+    var acceptedCount = Newtonsoft.Json.JsonConvert.SerializeObject(chartData.Select(x => x.AcceptedCount).ToList());
+    var inworkCount = Newtonsoft.Json.JsonConvert.SerializeObject(chartData.Select(x => x.InWorkCount).ToList());
+    var recived = Newtonsoft.Json.JsonConvert.SerializeObject(chartData.Select(x => x.Recived).ToList());
+
+    List<ReportCount> reportsChartData = ((EngineerData)ViewBag.Data).LkStat.ReportCounts;
+    var reports = Newtonsoft.Json.JsonConvert.SerializeObject(reportsChartData.Select(x => x.Type).ToList());
+    var rTotalCount = Newtonsoft.Json.JsonConvert.SerializeObject(reportsChartData.Select(x => x.TotalCount).ToList());
+    var rAcceptedCount = Newtonsoft.Json.JsonConvert.SerializeObject(reportsChartData.Select(x => x.AcceptedCount).ToList());
+    var rImportedCount = Newtonsoft.Json.JsonConvert.SerializeObject(reportsChartData.Select(x => x.ImportedCount).ToList());
+    var rRemarksCount = Newtonsoft.Json.JsonConvert.SerializeObject(reportsChartData.Select(x => x.RemarksCount).ToList());
+    var rInworkCount = Newtonsoft.Json.JsonConvert.SerializeObject(reportsChartData.Select(x => x.InWorkCount).ToList());
+    var rSentCount = Newtonsoft.Json.JsonConvert.SerializeObject(reportsChartData.Select(x => x.SentCount).ToList());
+
+
+}
+<script src="~/lib/chart.js/Chart.bundle.min.js"></script>
+
+<div class="box-body">
+    <div style="width: 100%">
+        <canvas id="canvas1"></canvas>
+    </div>
+</div>
+
+<div class="box-body">
+    <div style="width: 100%">
+        <canvas id="canvas2"></canvas>
+    </div>
+</div>
+
+<script>
+        var barChartData = {
+            labels: @Html.Raw(names),
+            datasets: [
+                {
+                    label: 'Всего ПУ получено',
+                    backgroundColor: 'rgba(246, 36, 89, 1)',
+                    data: @Html.Raw(recived),
+                },
+                {
+                    label: 'Всего ПУ включеных в отчеты',
+                        backgroundColor: 'rgba(54, 162, 235)',
+                    data: @Html.Raw(totalCount),
+			    },
+                {
+                    label: 'Принято ПУ',
+                    backgroundColor: 'rgba(75, 192, 192)',
+                    data: @Html.Raw(acceptedCount),
+			    },
+                {
+                    label: 'ПУ в работе',
+                    backgroundColor: 'rgba(201, 203, 207)',
+                    data: @Html.Raw(inworkCount),
+			    }]
+    }
+
+    var barChartData2 = {
+        labels: @Html.Raw(reports),
+        datasets: [
+            {
+                label: 'Всего отчетов',
+                backgroundColor: 'rgba(246, 36, 89, 1)',
+                data: @Html.Raw(rTotalCount),
+            },
+            {
+                label: 'Принято',
+                backgroundColor: 'rgba(54, 162, 235)',
+                data: @Html.Raw(rAcceptedCount),
+            },
+            {
+                label: 'Импортировано',
+                backgroundColor: 'rgba(201, 203, 207)',
+                data: @Html.Raw(rImportedCount),
+            },
+            {
+                label: 'На проверке',
+                backgroundColor: 'rgba(245, 229, 27, 1)',
+                data: @Html.Raw(rSentCount),
+            },
+            {
+                label: 'С замечаниями',
+                backgroundColor: 'rgba(75, 192, 192)',
+                data: @Html.Raw(rRemarksCount),
+            },
+            {
+                label: 'В работе',
+                backgroundColor: 'rgba(248, 148, 6, 1)',
+                data: @Html.Raw(rInworkCount),
+            }]
+    }
+
+    $(document).ready(function () {
+        var ctx = document.getElementById('canvas1').getContext('2d');
+        window.myBar1 = new Chart(ctx, {
+            type: 'bar',
+            data: barChartData,
+            options: {
+                responsive: true,
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Статистика по мотажникам'
+                }
+            }
+        });
+
+        var ctx2 = document.getElementById('canvas2').getContext('2d');
+        window.myBar2 = new Chart(ctx2, {
+            type: 'bar',
+            data: barChartData2,
+            options: {
+                responsive: true,
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Статистика по отчетам'
+                }
+            }
+        });
+    })
+       
+
+</script>

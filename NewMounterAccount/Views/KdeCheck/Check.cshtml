@@ -1,0 +1,137 @@
+﻿
+@{
+    ViewData["Title"] = "Выверка КДЕ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Выверка КДЕ</h2>
+
+<div class="row">
+    <label for="NetRegionId">Выберите РЭС</label>
+    @Html.DropDownList("NetRegionID", ViewBag.NetRegions as SelectList, new { @class = "form-control", @autocomplete = "on", @required = "true", @onchange = "GetSubstations()" })
+</div>
+<div id="substationSelect">
+
+</div>
+
+<h6 style="color:green">@ViewData["info"]</h6>
+<h6 style="color:red">@ViewData["error"]</h6>
+<div class="loader" id="Loading"></div>
+@if (User.IsInRole("engineer") || User.IsInRole("administrator"))
+{
+    int n = 1;
+    <h5>Статистика по монтажникам</h5>
+    <table class="table table-sm table-bordered table-hover">
+        <thead>
+            <tr style="background:#EEF3F6">
+                <th>#</th>
+                <th>ФИО</th>
+                <th>КДЕ-1</th>
+                <th>КДЕ-3</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (NewMounterAccount.Models.KdeCheckStat stat in ViewBag.Stat)
+            {
+                @if (stat.Kde1Count > 0 || stat.Kde3Count > 0)
+                {
+                    <tr>
+                        <td>@n</td>
+                        <td>@stat.WorkerName</td>
+                        <td>@stat.Kde1Count</td>
+                        <td>@stat.Kde3Count</td>
+                    </tr>
+                    n++;
+                }
+            }
+        </tbody>
+
+    </table>
+    <div class="text-right">
+        <button class="btn btn-primary" onclick="GenerateExcel()">Excel</button>
+    </div>
+}
+@if (User.IsInRole("administrator"))
+{
+    <h3>Обновление списка подстанций</h3>
+    <div>
+        <form method="post" enctype="multipart/form-data" action="/KdeCheck/UploadFile">
+            <div class="form-group">
+                <div class="col-md-10">
+                    <input type="file" name="file" />
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-10">
+                    <input type="submit" value="Загрузить" class="btn btn-primary" />
+                </div>
+            </div>
+        </form>
+    </div>
+}
+
+<script>
+
+    $(document).ready(function () {
+        $('#Loading').hide();
+    });
+    function GetSubstations() {
+        var xhr = new XMLHttpRequest();
+        var body = "netRegionId=" + encodeURIComponent($('#NetRegionID').val());
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#substationSelect').html(xhr.response);
+            }
+        }
+        xhr.open("POST", '/KdeCheck/GetSubstations', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function OpenSubstation() {
+        window.location.href = '/KdeCheck/Substation/' + $('#SubstationId').val();
+    }
+
+     function GenerateExcel() {
+        var xhr = new XMLHttpRequest();
+        //var body = "id=" + encodeURIComponent(@ViewBag.actId);
+        xhr.responseType = 'blob';
+        $('#Loading').fadeIn();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                LoadDocument(xhr);
+                $('#Loading').fadeOut();
+            }
+            if (xhr.status === 500) {
+                $('#Loading').fadeOut();
+                alert("Не удалось сгенирировать файл!");
+            }
+        }
+         xhr.open("POST", '/KdeCheck/OverallReport', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send();
+    }
+
+     function LoadDocument(xhr) {
+        if (xhr.status == 200) {
+            // Create a new Blob object using the
+            //response data of the onload object
+            var blob = new Blob([xhr.response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            //Create a link element, hide it, direct
+            //it towards the blob, and then 'click' it programatically
+            let a = document.createElement("a");
+            a.style = "display: none";
+            document.body.appendChild(a);
+            //Create a DOMString representing the blob
+            //and point the link element towards it
+            let url = window.URL.createObjectURL(blob);
+            a.href = url;
+            a.download = 'Отчет КДЕ.xlsx';
+            //programatically click the link to trigger the download
+            a.click();
+            //release the reference to the file by revoking the Object URL
+            window.URL.revokeObjectURL(url);
+        } else {
+        }
+    };
+</script>

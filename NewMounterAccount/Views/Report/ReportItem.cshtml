@@ -1,0 +1,99 @@
+﻿@{ 
+    string alertType = "alert alert-secondary report-item";
+    string type = "";
+
+}
+<div id="innerTable">
+    @foreach (var item in Model)
+    {
+        @if (item.State == "принят куратором" || item.State == "импортирован")
+        {
+            alertType = "alert alert-success report-item";
+        }
+        @if (item.State == "с замечаниями куратора")
+        {
+            alertType = "alert alert-warning report-item";
+        }
+        @if (item.State == "в работе")
+        {
+            alertType = "alert alert-secondary report-item";
+        }
+        @if (item.State == "отправлен куратору")
+        {
+            alertType = "alert alert-primary report-item";
+        }
+
+        @if (item.Type == "ВЛ") { type = "AL"; }
+        @if (item.Type == "ТП/РП") { type = "SB"; }
+        @if (item.Type == "УСПД") { type = "USPD"; }
+        @if(item.Type == "Демонтаж") { type = "Unmount"; }
+
+        <div class="@alertType" role="alert" id="@type@item.Id">
+            <div class="row">
+                <div class="col-md-3">
+                    <a href="/Report/OpenReport/?reportId=@item.Id&reportType=@item.Type" class="report-item">
+                        <h6>
+                            <span class="alert-icon">
+                                <i class="fas fa-file-invoice"></i>
+                            </span>
+                            Отчет №@item.Id от @item.Date.ToShortDateString() 
+                        </h6>
+                    </a>
+                </div>
+                <div class="col-md-2">
+                    <h6>@item.NetRegion @item.Substation</h6>
+                </div>
+                <div class="col-md-2 ">
+                    @if (type == "Unmount")
+                    {
+                        <h6>Демонтировано: @item.Mounted</h6>
+                    }
+                    else
+                    {
+                    <h6>Установлено: @item.Mounted</h6>
+                    }
+                </div>
+                <div class="col-md-2 ">
+                    <h6>Принято: @item.Accepted</h6>
+                </div>
+                <div class="col-md-3">
+                    <h6>Статус: @item.State</h6>
+                </div>
+
+            </div>
+
+            <div class="d-flex flex-row-reverse">
+                @if (item.State != "отправлен куратору" && item.State != "принят куратором" && item.State != "импортирован")
+                {
+                <div class="p-2">
+                    @if (item.Type == "ВЛ")
+                    {
+                        <button class="btn btn-danger" onclick="DeleteALReport(@item.Id)">-</button>
+                    }
+
+                    @if (item.Type == "ТП/РП")
+                    {
+                        <button class="btn btn-danger" onclick="DeleteSBReport(@item.Id)">-</button>
+                    }
+
+                    @if (item.Type == "УСПД")
+                    {
+                        <button class="btn btn-danger" onclick="DeleteUSPDReport(@item.Id)">-</button>
+                    }
+                    @if (item.Type == "Демонтаж")
+                    {
+                        <button class="btn btn-danger" onclick="DeleteUnmountReport(@item.Id)">-</button>
+                    }
+
+
+                </div>
+                }
+                <div class="p-2">
+                    <a class="btn btn-outline-success" href="/Report/GenerateReport/?reportId=@item.Id&reportType=@item.Type">Excel</a>
+                </div>
+
+            </div>
+
+        </div>
+    }
+</div>

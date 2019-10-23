@@ -1,0 +1,569 @@
+﻿@using DbManager;
+@model USPDReport;
+@{
+    ViewData["Title"] = "Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string saveBtnAction;
+    bool open = false;
+    if (Model.Id != 0)
+    {
+        open = true; //Открытие отчета или создание нового
+        saveBtnAction = "/Report/EditUSPDReport";
+
+    }
+    else
+    {
+        saveBtnAction = "/Report/SaveUSPDReport";
+    }
+
+    bool mounter = User.IsInRole("mounter");
+
+}
+<link href="~/lib/air-datepicker/dist/css/datepicker.css" rel="stylesheet" type="text/css" />
+<script src="~/lib/air-datepicker/dist/js/datepicker.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
+
+
+<h2>Отчет @Model.Id @(((Contract)ViewBag.Contract).Name), @(((NetRegion)ViewBag.NetRegion).Name)</h2>
+<div id="accordion">
+    <h3>Параметры отчета</h3>
+    <div>
+        <form action="@saveBtnAction" method="post" id="form1" onsubmit="DotReplace()">
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="inputGroup">Объект</label>
+                    <div class="input-group mb-3" id="inputGroup">
+
+                        <select class="custom-select" onchange="val()" id="substationType">
+                            <option id="tp" value="ТП">ТП</option>
+                            <option id="rp" value="РП">РП</option>
+                        </select>
+
+                        <div class="input-group-prepend" id="substationSeparator">
+                            <label class="input-group-text" for="substationNumber">-</label>
+                        </div>
+                        <div class="input-group-prepend" id="substationNumber">
+                            <input type="text" class="form-control" onchange="val()" id="SubstationNumber" name="SubstationNumber" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label for="date">Дата</label>
+                    <input type='text' autocomplete="off" id="date" name="date" class='datepicker-here form-control' required />
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label for="Local">Населеный пункт</label>
+                    <input type="text" id="Local" name="Local" class="form-control" value="@Model.Local" required />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label for="Brigade">Состав бригады (ФИО разделить ';')</label>
+                    <input type="text" class="form-control" id="Brigade" name="Brigade" value="@Model.Brigade" required />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="PhoneNumber">№ сим-карты</label>
+                    <input type="text" class="form-control" id="PhoneNumber" name="PhoneNumber" value="@Model.PhoneNumber" />
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label for="USPD">№ УСПД</label>
+                    <input type="text" class="form-control" id="UspdSerial" name="UspdSerial" value="@Model.UspdSerial" required onchange="CheckUSPD()" />
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label for="PlcSerial">№ PLC-модема</label>
+                    <input type="text" class="form-control" id="PlcSerial" name="PlcSerial" value="@Model.PlcSerial" required onchange="CheckPLC()" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="Kvvg">Кабель ВВГ 3x2.5, м.</label>
+                    <input type="text" class="form-control" id="Kvvg" name="Kvvg" value="@Model.Kvvg" onchange="DotReplace()" />
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label for="Gofr">Труба гофрированная, м.</label>
+                    <input type="text" class="form-control" id="Gofr" name="Gofr" value="@Model.Gofr" onchange="DotReplace()" />
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label for="Ftp">Витая пара, м.</label>
+                    <input type="text" class="form-control" id="Ftp" name="Ftp" value="@Model.Ftp" onchange="DotReplace()" />
+                </div>
+            </div>
+            @if (mounter)
+            {
+                <div class="text-right">
+                    <input type="hidden" form="form1" id="Substation" name="Substation" />
+                    <input type="hidden" form="form1" name="ContractId" value="@ViewBag.Contract.Id" />
+                    <input type="hidden" form="form1" name="NetRegionId" value="@ViewBag.NetRegion.Id" />
+                    <input type="hidden" form="form1" name="Id" value="@Model.Id" />
+                    <input type="submit" onclick="val()" id="submitButton" form="form1" class="btn btn-primary" value="Сохранить" />
+                </div>
+            }
+        </form>
+    </div>
+</div>
+
+@if (open)
+{
+    <div id="commentsAccordion">
+        <h3>Комментарии</h3>
+        <div>
+            <div class="form-row mb-3">
+                <textarea class="form-control mb-2" rows="2" id="text"></textarea>
+                <button class="btn btn-primary ml-auto" onclick="Addcoment(@Model.Id, 'УСПД')">Отправить</button>
+            </div>
+            <div id="commentsTable">
+                @await Html.PartialAsync("~/Views/Report/_comments.cshtml", (List<DbManager.ReportComment>)ViewBag.Comments)
+            </div>
+        </div>
+    </div>
+
+    <div style="height:10px"></div>
+    @if (((List<DbManager.ReportRemark>)ViewBag.Remarks).Count > 0)
+    {
+        <div class="card">
+            <div class="card-header">
+                Замечания
+            </div>
+            <div id="remarksAccordion">
+                @{
+                    int count = 1;
+                    foreach (DbManager.ReportRemark remark in ViewBag.Remarks)
+                    {
+                        <h3>Замечание №@count от @remark.User.Name</h3>
+                        <div>
+                            @remark.Text
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+        <div style="height:10px"></div>
+    }
+
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex">
+                <div class="p-2">
+                    Вводные ПУ
+                </div>
+                @if (mounter)
+                {
+                    <div class="ml-auto p-2">
+                        <button class="btn btn-outline-success" data-toggle="modal" data-target="#addSwitch">Добавить вводной ПУ</button>
+                    </div>
+                }
+            </div>
+
+        </div>
+        @await Html.PartialAsync("~/Views/Report/SB/_SwitchesTable.cshtml", Model.Switches)
+    </div>
+    @if (mounter)
+    {
+        <div class="row m-1">
+            <button class="btn btn-block btn-primary" data-toggle="modal" data-target="#sendToCurator">Отправить куратору</button>
+        </div>
+
+        <div class="modal fade" id="addSwitch" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Добавление рубильника</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form id="addSwitchForm" name="addSwitchForm">
+                        <div class="modal-body">
+                            <div class="form-row">
+                                <div class="col-md-3">
+                                    <label for="SwitchNumber">Ввод</label>
+                                    <input type="hidden" name="SwitchType" value="Ввод" />
+                                    <select id="SwitchNumber" name="SwitchNumber" class="form-control">
+                                        <option value="1">Ввод №1</option>
+                                        <option value="2">Ввод №2</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="DeviceSerial">Номер счетчика</label>
+                                    <input type="text" id="DeviceSerial" name="DeviceSerial" class="form-control" onchange="CheckDevice()" required />
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="DeviceSeal">Пломба счетчика</label>
+                                    <input type="text" id="DeviceSeal" name="DeviceSeal" class="form-control" required />
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="TestBoxSeal">Пломба КИ-10</label>
+                                    <input type="text" id="TestBoxSeal" name="TestBoxSeal" class="form-control" required />
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="KVVG">Кабель КВВГ, м</label>
+                                    <input type="text" id="KVVG" name="KVVG" class="form-control" required onchange="DotReplace2()"/>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <label for="Sum">Показание TOTAL</label>
+                                    <input type="text" id="Sum" name="Sum" class="form-control" required />
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="T1">Показание T1</label>
+                                    <input type="text" id="T1" name="T1" class="form-control" required />
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="Sum">Показание T2</label>
+                                    <input type="text" id="T2" name="T2" class="form-control" required />
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <label for="TTAk">Коэффициент ТТ ф.A</label>
+                                    <div class="input-group" id="A">
+                                        <input type="number" min="0" max="2000" step="50" class="form-control" id="TTAk" name="TTAk" required aria-label="Recipient's username" aria-describedby="basic-addon2">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id="basic-addon2">/5</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="TTANumber">Номер ТТ ф.A</label>
+                                    <input type="text" id="TTANumber" name="TTANumber" required class="form-control" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="TTASeal">Пломба ТТ ф.A</label>
+                                    <input type="text" id="TTASeal" name="TTASeal" required class="form-control" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <label for="B">Коэффициент ТТ ф.B</label>
+                                    <div class="input-group" id="B">
+                                        <input type="number" min="0" max="2000" step="50" required class="form-control" id="TTBk" name="TTBk" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id="basic-addon2">/5</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="TTBNumber">Номер ТТ ф.B</label>
+                                    <input type="text" id="TTBNumber" required name="TTBNumber" class="form-control" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="TTBSeal">Пломба ТТ ф.B</label>
+                                    <input type="text" id="TTBSeal" required name="TTBSeal" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <label for="C">Коэффициент ТТ ф.C</label>
+                                    <div class="input-group" id="C">
+                                        <input type="number" min="0" max="2000" step="50" required class="form-control" id="TTCk" name="TTCk" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id="basic-addon2">/5</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="TTCNumber">Номер ТТ ф.C</label>
+                                    <input type="text" id="TTCNumber" required name="TTCNumber" class="form-control" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="TTCSeal">Пломба ТТ ф.C</label>
+                                    <input type="text" id="TTCSeal" required name="TTCSeal" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="hidden" id="USPDReportId" name="USPDReportId" value="@Model.Id" />
+                            <input type="button" class="btn btn-primary" value="Добавить" onclick="AddSwitch()" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="sendToCurator" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Отправка отчета кратору</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <label for="UserId">Выберите куратора</label>
+                            @Html.DropDownList("UserId", ViewBag.Curators as SelectList, new { @class = "form-control" })
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" onclick="SendReport(@Model.Id)">Отправить</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    }
+
+}
+
+@if (!open)
+{
+    <script>
+        $(function () {
+            $("#accordion").accordion({
+                collapsible: true,
+                heightStyle: "content",
+                active: 0
+            });
+        });
+
+    </script>
+}
+else
+{
+    <script>
+        $(function () {
+            $("#accordion").accordion({
+                collapsible: true,
+                heightStyle: "content",
+                active: false
+            });
+        });
+
+        $(function () {
+            $("#remarksAccordion").accordion({
+                collapsible: true,
+                heightStyle: "content",
+                active: false
+            });
+        });
+
+        $(function () {
+            $("#SwitchesTable").accordion({
+                header: "> div > h3",
+                collapsible: true,
+                heightStyle: "content",
+                active: false
+            });
+        });
+
+         if ("@Model.AVR" === "True")
+        document.getElementById("AVR").checked = true;
+    </script>
+}
+
+<script>
+    $('#date').datepicker({
+        startDate: new Date(),
+        maxDate: new Date()
+    });
+
+
+    $("#commentsAccordion").accordion({
+        collapsible: true,
+        heightStyle: "content",
+        active: false
+    });
+
+    $(document).ready(function () {
+        if ("@Model.Id" === "0") {
+            var date = new Date();
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+
+            if (day.toString().length === 1)
+                day = "0" + day;
+            if (month.toString().length === 1)
+                month = "0" + month;
+            $('#date').val(day + '.' + month + '.' + date.getFullYear());
+
+        }
+        else {
+            $('#date').val("@Html.Raw(Model.Date.ToShortDateString())");
+
+        }
+    });
+
+
+function val() {
+    var val1 = document.getElementById("substationType").value;
+    var val2 = document.getElementById("SubstationNumber").value;
+    document.getElementById("Substation").value = val1 + " " + val2;
+    }
+
+
+    function CheckPhoneNumber() {
+        var number = $('#PhoneNumber').val();
+        var reg = new RegExp('[0-9]{11}');
+        if (!reg.test(number)) {
+            alert("Не верный формат номера сим");
+            $('#PhoneNumber').val('');
+        }
+    }
+
+    function CheckDevice() {//Проверка возможности добавить ПУ в отчет
+        serial = document.getElementById("DeviceSerial").value;
+        var xhr = new XMLHttpRequest();
+        var body = "serialNumber=" + encodeURIComponent(serial) + "&contractId=" + encodeURIComponent(@ViewBag.Contract.Id);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200 && xhr.responseText.length > 0) {
+                $('#DeviceSerial').val('');
+                alert(xhr.responseText);
+            }
+        }
+
+        xhr.open("POST", '/Report/CheckDevice', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    //Проверка возможности включить УСПД в отчет
+        function CheckUSPD() {
+            var xhr = new XMLHttpRequest();
+            var body = "serial=" + encodeURIComponent($('#UspdSerial').val()) + "&contractId=" + encodeURIComponent(@(((Contract)ViewBag.Contract).Id));
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200 && xhr.responseText.length > 0) {
+                    alert(xhr.responseText);
+                    $('#UspdSerial').val('');
+                }
+            }
+
+            xhr.open("POST", '/Report/CheckUSPD', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(body);
+        }
+
+        //Проверка возможности включить PLC модем в отчет
+        function CheckPLC() {
+            var xhr = new XMLHttpRequest();
+            var body = "serial=" + encodeURIComponent($('#PlcSerial').val()) + "&contractId=" + encodeURIComponent(@(((Contract)ViewBag.Contract).Id));
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200 && xhr.responseText.length > 0) {
+                    alert(xhr.responseText);
+                    $('#PlcSerial').val('');
+                }
+            }
+
+            xhr.open("POST", '/Report/CheckPLC', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(body);
+        }
+
+        function DeleteSwitch(id) {//Удаление рубильника
+        var xhr = new XMLHttpRequest();
+        var body = "switchId=" + encodeURIComponent(id) + "&reportId=" + encodeURIComponent(@Model.Id) + "&reportType=USPD";
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200 && xhr.responseText.length === 0) {
+                $('#switch_' + id).remove();
+            }
+            else {
+                if (xhr.responseText.length > 0)
+                    alert(xhr.responseText);
+            }
+        }
+
+        xhr.open("POST", '/Report/DeleteSwitch', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+
+
+    function AddSwitch() {//Проверка возможности добавить ПУ в отчет
+        var formData = new FormData(document.forms.addSwitchForm)
+        var xhr = new XMLHttpRequest();
+        DotReplace();
+        DotReplace2();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#addSwitch').modal('toggle');
+                $('#SwitchesTable').replaceWith(xhr.response);
+
+                $("#SwitchesTable").accordion({
+                    header: "> div > h3",
+                    collapsible: true,
+                    heightStyle: "content",
+                    active: false
+                });
+
+            }
+        }
+
+        xhr.open("POST", '/Report/AddSwitchUSPD', true);
+        //xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(formData);
+    }
+
+    function SendReport(reportId) {
+        $('#sendToCurator').modal('toggle');
+        var xhr = new XMLHttpRequest();
+        var body = "id=" + encodeURIComponent(reportId) + "&curatorId=" + encodeURIComponent($('#UserId').val());
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                alert(xhr.responseText);
+            }
+        }
+
+        xhr.open("POST", '/Report/SendUSPDReport', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function Addcoment(reportId, reportType) {
+        var xhr = new XMLHttpRequest();
+        var text = $('#text').val();
+        var body = "reportId=" + encodeURIComponent(reportId) + "&reportType=" + encodeURIComponent(reportType) + "&text=" + encodeURIComponent(text);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#commentsTable').html(xhr.response);
+                $('#text').val('');
+            }
+        }
+        xhr.open("POST", '/Report/AddComment', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+     function DotReplace() {
+        // $('#KVVG').val($('#KVVG').val().replace('.', ','));
+         $('#Kvvg').val($('#Kvvg').val().replace('.', ','));
+         $('#Gofr').val($('#Gofr').val().replace('.', ','));
+         $('#Ftp').val($('#Ftp').val().replace('.', ','));
+    }
+    function DotReplace2() {
+        $('#KVVG').val($('#KVVG').val().replace('.', ','));
+    }
+</script>
+
+@if (open)
+{
+    <script>
+        $('#substationType').val("@Html.Raw(Model.Substation.ToString().Substring(0, 2))");
+        $('#SubstationNumber').val("@Html.Raw(Model.Substation.ToString().Substring(3))");
+
+
+    </script>
+
+
+}

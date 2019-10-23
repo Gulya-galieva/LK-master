@@ -1,0 +1,1056 @@
+﻿@using DbManager;
+@model MounterReportUgesAL;
+@{
+    ViewData["Title"] = "Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string saveBtnAction;
+    bool open = false;
+    if (Model.Id != 0)
+    {
+        open = true; //Открытие отчета или создание нового
+        saveBtnAction = "/Report/EditALReport";
+
+    }
+    else
+    {
+        saveBtnAction = "/Report/SaveALReport";
+    }
+    bool mounter = User.IsInRole("mounter");
+
+}
+<link href="~/lib/air-datepicker/dist/css/datepicker.css" rel="stylesheet" type="text/css" />
+<script src="~/lib/air-datepicker/dist/js/datepicker.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
+
+<h2>Отчет @Model.Id @(((Contract)ViewBag.Contract).Name), @(((NetRegion)ViewBag.NetRegion).Name)</h2>
+
+<div id="accordion">
+    <h3>Параметры отчета</h3>
+    <div>
+        <form action="@saveBtnAction" method="post" id="form1">
+            <div class="row">
+                <div class="col-md-2 mb-3">
+                    <label for="date">Дата</label>
+                    <input type='text' autocomplete="off" id="date" name="date" class='datepicker-here form-control' required />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="inputGroup">Объект</label>
+                    <div class="input-group mb-3" id="inputGroup">
+
+                        <select class="custom-select" onchange="val()" id="substationType">
+                            <option id="tp" value="ТП">ТП</option>
+                            <option id="rp" value="РП">РП</option>
+                        </select>
+
+                        <div class="input-group-prepend" id="substationSeparator">
+                            <label class="input-group-text" for="substationNumber">-</label>
+                        </div>
+                        <div class="input-group-prepend" id="substationNumber">
+                            <input type="text" class="form-control" onchange="val()" id="SubstationNumber" name="SubstationNumber" />
+                        </div>
+
+                    </div>
+
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="WorkPermit">№ наряда-допуска</label>
+
+                    <input type="text" class="form-control" id="WorkPermit" name="WorkPermit" required />
+
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="Fider">№ линии/фидера</label>
+                    <input type="text" class="form-control" id="Fider" name="Fider" required />
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="Local">Нас. пункт</label>
+                    <input type="text" class="form-control" id="Local" name="Local" required />
+                </div>
+            </div>
+        </form>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Состав бригады (Формат ввода: Фамилия пробел И.О.)</label>
+            </div>
+
+            <div class="col-md-2 mb-3">
+                <div class="btn-group flex-shrink-1 bd-highlight" role="group">
+                    <button type="button" class="btn btn-outline-primary" id="remove_field" role="button" aria-pressed="true">-</button>
+                    <button type="button" class="btn btn-outline-success" id="add_field_button" role="button" aria-pressed="true">+</button>
+                </div>
+            </div>
+        </div>
+        <div class="row" id="brigadeRow">
+            <div class="col-md-3 mb-3">
+                <label for="Brigade1">Работник 1</label>
+                <input type="text" class="form-control" form="form1" id="Brigade1" name="Brigade1" required pattern="[А-Яа-я]+ [А-Яа-я]{1}\.[А-Яа-я]{1}\." />
+            </div>
+            <div class="col-md-3 mb-3">
+                <label for="Brigade2">Работник 2</label>
+                <input type="text" class="form-control" form="form1" id="Brigade2" name="Brigade2" required pattern="[А-Яа-я]+ [А-Яа-я]{1}\.[А-Яа-я]{1}\." />
+            </div>
+
+        </div>
+        @if (mounter)
+        {
+            <div class="text-right">
+                <input type="hidden" form="form1" id="Substation" name="Substation" />
+                <input type="hidden" form="form1" id="Brigade" name="Brigade" />
+                <input type="hidden" form="form1" name="ContractId" value="@ViewBag.Contract.Id" />
+                <input type="hidden" form="form1" name="NetRegionId" value="@ViewBag.NetRegion.Id" />
+                <input type="hidden" form="form1" name="Id" value="@Model.Id" />
+                <input type="submit" onclick="val()" id="submitButton" form="form1" class="btn btn-primary" value="Сохранить" />
+            </div>
+        }
+    </div>
+
+
+    @if (open && mounter)
+    {
+        <h3>Добавить опору</h3>
+        <div>
+            <form id="supportAddForm">
+                @*action="/Report/AddPowerLineSupport" id="form2" method="post">*@
+                @*data-ajax="true" data-ajax-mode="replace" data-ajax-update="#accordion_supports">*@
+                <div class="form-row">
+                    <div class="col-md-4">
+                        <label for="SupportNumber">№ опоры</label>
+                        <input type='text' autocomplete="off" pattern="\d*" id="SupportNumber" name="SupportNumber" class='form-control' required />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="PowerLineType">Тип основной магистрали</label>
+                        <select id="PowerLineType" name="PowerLineType" class='form-control' required>
+                            <option value="СИП">СИП</option>
+                            <option value="ГП">ГП</option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="FixatorsCount">Кол-во дист. фиксаторов</label>
+                        <input type='text' autocomplete="off" id="FixatorsCount" name="FixatorsCount" pattern="\d*" class='form-control' required />
+
+                    </div>
+                </div>
+
+                <div class="text-right">
+                    <input type="hidden" id="MounterReportUgesALId" name="MounterReportUgesALId" value="@Model.Id" />
+                    <input type="submit" id="addPLSbtn" class="btn btn-primary " value="Добавить" />
+                    @*<button class="btn btn btn-outline-warning" onclick="AddSupport()">+</button>
+                        <button class="btn btn btn-outline-warning" onclick="Refr()">()</button>*@
+                </div>
+            </form>
+        </div>
+    }
+</div>
+
+@if (open)
+{
+    <div style="height:10px"></div>
+    @if (((List<DbManager.ReportRemark>)ViewBag.Remarks).Count > 0)
+    {
+        <div class="card">
+            <div class="card-header">
+                Замечания
+            </div>
+            <div id="remarksAccordion">
+                @{
+                    int count = 1;
+                    foreach (DbManager.ReportRemark remark in ViewBag.Remarks)
+                    {
+                        <h3>Замечание №@count от @remark.User.Name</h3>
+                        <div>
+                            @remark.Text
+                        </div>
+                        count++;
+                    }
+                }
+            </div>
+        </div>
+        <div style="height:10px"></div>
+    }
+
+    <div id="commentsAccordion">
+        <h3>Комментарии</h3>
+        <div>
+            <div class="form-row mb-3">
+                <textarea class="form-control mb-2" rows="2" id="text"></textarea>
+                <button class="btn btn-primary ml-auto" onclick="Addcoment(@Model.Id, 'ВЛ')">Отправить</button>
+            </div>
+            <div id="commentsTable">
+                @await Html.PartialAsync("~/Views/Report/_comments.cshtml", (List<DbManager.ReportComment>)ViewBag.Comments)
+            </div>
+        </div>
+    </div>
+
+
+    <div style="height:10px"></div>
+    <div class="card">
+        <div class="card-header">
+            Опоры
+        </div>
+        @await Html.PartialAsync("~/Views/Report/AL/_PowerLineSupports.cshtml", Model.PowerLineSupports)
+    </div>
+
+    @if (mounter)
+    {
+        <div class="row m-1">
+            <button class="btn btn-block btn-primary" data-toggle="modal" data-target="#sendToCurator">Отправить куратору</button>
+        </div>
+
+        <div class="modal fade" id="addKDE" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Добавление КДЕ</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form>
+                        @*action="~/Report/AddKDE" method="post" onsubmit="CloseModal()" data-ajax="true" data-ajax-mode="replace" data-ajax-update="#accordion_supports" id="addkDE">*@
+                        <div class="modal-body">
+                            <div class="form-row">
+                                <label for="KDEType">Тип КДЕ</label>
+                                <select class="form-control" id="KDEType" name="KDEType" required>
+                                    <option value="КДЕ-1">КДЕ-1</option>
+                                    <option value="КДЕ-3">КДЕ-3</option>
+                                    <option value="КДЕ-3-1">КДЕ-3-1</option>
+                                    <option value="КДЕ-3-2">КДЕ-3-2</option>
+                                    <option value="КДЕ-1 GSM">КДЕ-1 GSM</option>
+                                    <option value="КДЕ-3 GSM">КДЕ-3 GSM</option>
+                                </select>
+
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="hidden" id="PowerLineSupportId" name="PowerLineSupportId" />
+
+                            <input type="submit" class="btn btn-primary" id="kdeAddBtn" value="Добавить" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="sendToCurator" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Отправка отчета кратору</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <label for="UserId">Выберите куратора</label>
+                            @Html.DropDownList("UserId", ViewBag.Curators as SelectList, new { @class = "form-control" })
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" onclick="SendReport(@Model.Id)">Отправить</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="addMaterial" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Доп. материалы</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <div class="col-md-8">
+                                <label for="MaterialId">Выберите материал</label>
+                                @Html.DropDownList("MaterialId", ViewBag.Materials as SelectList, new { @class = "form-control" })
+                            </div>
+                            <div class="col-md-4">
+                                <label for="Volume">Кол-во</label>
+                                <input type="text" id="MaterialVolume" name="Volume" class="form-control" required pattern="\d+(,\d{1,10})?" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="hidden" id="AdditionalMaterialDeviceId" />
+                        <input type="hidden" id="AdditionalMaterialKDEId" />
+                        <button class="btn btn-primary" onclick="AddAdditionalMaterial()">Сохранить</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="addPU" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Добавление ПУ</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form action="~/Report/AddDALPU" method="post" data-ajax="true" data-ajax-mode="replace" data-ajax-update="" id="addPUForm" name="addPUForm" onsubmit="CloseModalPU()">
+                        <div class="modal-body">
+
+                            <div class="form-row">
+                                <div class="col-md-3">
+                                    <label for="Street">Улица</label>
+                                    <input type="text" class="form-control" id="Street" name="Street" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="House">Дом</label>
+                                    <input type="text" class="form-control" id="House" name="House" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="Building">Корпус</label>
+                                    <input type="text" class="form-control" id="Building" name="Building" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="Flat">Квартира</label>
+                                    <input type="text" class="form-control" id="Flat" name="Flat" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-md-6">
+                                    <label for="Serial">Заводской номер</label>
+                                    <input type="text" onchange="CheckDevice()" class="form-control" id="Serial" name="Serial" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="DeviceSeal">Пломба ПУ</label>
+                                    <input type="text" class="form-control" id="DeviceSeal" name="DeviceSeal" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="DeviceSeal">Место устанвки ПУ</label>
+                                    <select class="form-control" id="InstallPlace" name="InstallPlace" required>
+                                        <option value="Опора">Опора</option>
+                                        <option value="Фасад">Фасад</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <label for="Sum">Сумма</label>
+                                    <input type="text" class="form-control" id="Sum" name="Sum" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="T1">Т1</label>
+                                    <input type="text" class="form-control" id="T1" name="T1" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="T2">T2</label>
+                                    <input type="text" class="form-control" id="T2" name="T2" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <label for="U1">U1</label>
+                                    <input type="text" class="form-control" id="U1" name="U1" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="U2">U2</label>
+                                    <input type="text" class="form-control" id="U2" name="U2" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="U3">U3</label>
+                                    <input type="text" class="form-control" id="U3" name="U3" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-md-6">
+                                    <label for="UpDownWire">"Спуск-подъем" СИП, м.</label>
+                                    <input type="text" class="form-control" id="UpDownWire" name="WireConsumptionUpDown" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="NewWire">"Новый ввод" СИП, м.</label>
+                                    <input type="text" class="form-control" id="NewWire" name="WireConsumptionNewInput" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <label for="KDESeal">Пломба КДЕ</label>
+                                    <input type="text" class="form-control" id="KDESeal" name="KDESeal" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="SwitchSeal">Пломба на вв. авт.</label>
+                                    <input type="text" class="form-control" id="SwitchSeal" name="SwitchSeal" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="PowerLineType">Тип осн. маг.</label>
+                                    <select class="form-control" id="PowerLineType" name="PowerLineType" required>
+                                        <option value="СИП">СИП</option>
+                                        <option value="ГП">ГП</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row" id="sim">
+                                <div class=" col-md-12">
+                                    <label for="PhoneNumber">№ сим</label>
+                                    <input type="tel" id="PhoneNumber" name="PhoneNumber" class="form-control" required />
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="modal-footer">
+                            <input type="hidden" id="KDEId" name="KDEId" />
+                            <input type="hidden" id="ContractId" value="@ViewBag.Contract.Id" />
+                            <input type="submit" class="btn btn-primary" value="Добавить" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="editSupport" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Редактировать опору</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <div class="col-md-4">
+                                <label for="SupportNumberEdit">№ опоры</label>
+                                <input type='text' autocomplete="off" pattern="\d*" id="SupportNumberEdit" name="SupportNumberEdit" class='form-control' required />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="PowerLineTypeEdit">Тип основной магистрали</label>
+                                <select id="PowerLineTypeEdit" name="PowerLineTypeEdit" class='form-control' required>
+                                    <option value="СИП">СИП</option>
+                                    <option value="ГП">ГП</option>
+                                </select>
+
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="FixatorsCountEdit">Кол-во дист. фиксаторов</label>
+                                <input type='text' autocomplete="off" id="FixatorsCountEdit" name="FixatorsCountEdit" pattern="\d*" class='form-control' required />
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="hidden" id="PowerLineSupportIdEdit" name="PowerLineSupportIdEdit" />
+                        <button class="btn btn-primary" onclick="EditPowerLineSupport()">Сохранить</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="addCommentModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Добавить комментарий</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <textarea class="form-control" rows="3" id="text"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="EditPU" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Редактирование ПУ</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form action="~/Report/EditDALPU" method="post" data-ajax="true" data-ajax-mode="replace" data-ajax-update="" id="addPUFormE" name="addPUForm" onsubmit="$('#EditPU').modal('toggle')">
+                        <div class="modal-body">
+
+                            <div class="form-row">
+                                <div class="col-md-3">
+                                    <label for="Street">Улица</label>
+                                    <input type="text" class="form-control" id="StreetE" name="Street" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="House">Дом</label>
+                                    <input type="text" class="form-control" id="HouseE" name="House" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="Building">Корпус</label>
+                                    <input type="text" class="form-control" id="BuildingE" name="Building" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="Flat">Квартира</label>
+                                    <input type="text" class="form-control" id="FlatE" name="Flat" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-md-6">
+                                    <label for="Serial">Заводской номер</label>
+                                    <input type="text" onchange="CheckDevice()" class="form-control" id="SerialE" name="Serial" readonly required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="DeviceSeal">Пломба ПУ</label>
+                                    <input type="text" class="form-control" id="DeviceSealE" name="DeviceSeal" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="DeviceSeal">Место устанвки ПУ</label>
+                                    <select class="form-control" id="InstallPlaceE" name="InstallPlace" required>
+                                        <option value="Опора">Опора</option>
+                                        <option value="Фасад">Фасад</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <label for="Sum">Сумма</label>
+                                    <input type="text" class="form-control" id="SumE" name="Sum" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="T1">Т1</label>
+                                    <input type="text" class="form-control" id="T1E" name="T1" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="T2">T2</label>
+                                    <input type="text" class="form-control" id="T2E" name="T2" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <label for="U1">U1</label>
+                                    <input type="text" class="form-control" id="U1E" name="U1" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="U2">U2</label>
+                                    <input type="text" class="form-control" id="U2E" name="U2" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="U3">U3</label>
+                                    <input type="text" class="form-control" id="U3E" name="U3" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-md-6">
+                                    <label for="UpDownWire">"Спуск-подъем" СИП, м.</label>
+                                    <input type="text" class="form-control" id="UpDownWireE" name="WireConsumptionUpDown" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="NewWire">"Новый ввод" СИП, м.</label>
+                                    <input type="text" class="form-control" id="NewWireE" name="WireConsumptionNewInput" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <label for="KDESeal">Пломба КДЕ</label>
+                                    <input type="text" class="form-control" id="KDESealE" name="KDESeal" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="SwitchSeal">Пломба на вв. авт.</label>
+                                    <input type="text" class="form-control" id="SwitchSealE" name="SwitchSeal" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="PowerLineType">Тип осн. маг.</label>
+                                    <select class="form-control" id="PowerLineTypeE" name="PowerLineType" required>
+                                        <option value="СИП">СИП</option>
+                                        <option value="ГП">ГП</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row" id="simE">
+                                <div class=" col-md-12">
+                                    <label for="PhoneNumber">№ сим</label>
+                                    <input type="tel" id="PhoneNumberE" name="PhoneNumber" class="form-control" required />
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="modal-footer">
+                            <input type="hidden" id="KDEIdE" name="KDEId" />
+                            <input type="hidden" id="ContractIdE" value="@ViewBag.Contract.Id" />
+                            <input type="submit" class="btn btn-primary" value="Сохранить" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+
+<script>
+    $(function () {
+        $("#accordion").accordion({
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+
+        $("#supportTable").accordion({
+            header: "> div > h3",
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+
+        $("#remarksAccordion").accordion({
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+
+        $("#commentsAccordion").accordion({
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+    });
+
+    function PowerLineId(id) {
+        $('#PowerLineSupportId').val(id);
+    }
+
+    function KdeId(id) {
+        $('#KDEId').val(id);
+    }
+
+    function CloseModalPU() {
+        $('#addPU').modal('toggle');
+    }
+
+    function PuTableId(id) {
+        var addPuForm = document.getElementById('addPUForm');
+        var addPuFormE = document.getElementById('addPUFormE');
+        addPuForm.setAttribute('data-ajax-update', '#puTable_' + id);
+        addPuFormE.setAttribute('data-ajax-update', '#puTable_' + id);
+    }
+
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#sim').hide();
+        $("#PhoneNumber").prop('required', false);
+        $("#PhoneNumber").val('');
+        var max_fields = 9; //maximum input boxes allowed
+        var wrapper = $("#brigadeRow"); //Fields wrapper
+        var add_button = $("#add_field_button"); //Add button ID
+        var remove_button = $("#remove_field"); //Remove button
+        var submit_button = $("#submitButton");
+        var brigade_field;
+
+        var x = 3; //initlal text box count
+
+        function addField() {
+            if (x < max_fields) { //max input box allowed
+                $(wrapper).append('<div class="col-md-3 mb-3" id="BrigadeElement' + x + '"> <label for= "Brigade' + x + '"> Работник ' + x + '</label>  <input type="text" class="form-control" form="form1" id="Brigade' + x + '" name="Brigade' + x + '" required pattern="[А-Яа-я]+ [А-Яа-я]{1}\.[А-Яа-я]{1}\." /></div>'); //add input box
+                x++; //text box increment
+            }
+        }
+
+        $(add_button).click(function (e) { //on add input button click
+            e.preventDefault();
+            addField();
+        });
+
+        $(remove_button).click(function (e) {
+            if (x > 3) {
+                e.preventDefault();
+                $("#BrigadeElement" + (x - 1)).remove();
+                x--;
+            }
+        });
+
+        $(submit_button).click(function (e) {
+            brigade_field = $("#Brigade1").val() + "$";
+            for (i = 2; i < x; i++) {
+                brigade_field += $("#Brigade" + i).val() + "$";
+            }
+            brigade_field = brigade_field.substring(0, brigade_field.length - 1);
+            $("#Brigade").val(brigade_field);
+        });
+
+    });
+</script>
+
+<script>
+    function val() {
+        var val1 = document.getElementById("substationType").value;
+        var val2 = document.getElementById("SubstationNumber").value;
+        document.getElementById("Substation").value = val1 + " " + val2;
+    }
+</script>
+
+<script>
+    $('#date').datepicker({
+        startDate: new Date(),
+        maxDate: new Date()
+    })
+</script>
+
+<script>
+    $(document).ready(function () {
+        if ("@Model.Id" === "0") {
+            var date = new Date();
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+
+            if (day.toString().length === 1)
+                day = "0" + day;
+            if (month.toString().length === 1)
+                month = "0" + month;
+            $('#date').val(day + '.' + month + '.' + date.getFullYear());
+        }
+        else {
+             $('#date').val("@Html.Raw(Model.Date.ToShortDateString())");
+        }
+    });
+</script>
+
+@if (open)  //Открытие акта
+{
+    <script>
+        function OpenEditPowerLineSupportEditor(number, type, fixators, id) {
+            $('#SupportNumberEdit').val(number);
+            $('#PowerLineTypeEdit').val(type);
+            $('#FixatorsCountEdit').val(fixators);
+            $('#PowerLineSupportIdEdit').val(id);
+            $('#editSupport').modal('toggle');
+        }
+
+        function EditPowerLineSupport() {
+            var xhr = new XMLHttpRequest();
+            var body = "supportNumber=" + encodeURIComponent($('#SupportNumberEdit').val()) + "&powerLineType=" + encodeURIComponent($('#PowerLineTypeEdit').val())
+                + "&fixatorsCount=" + encodeURIComponent($('#FixatorsCountEdit').val()) + "&id=" + encodeURIComponent($('#PowerLineSupportIdEdit').val());
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    $('#editSupport').modal('toggle');
+                    $('#supportTable').replaceWith(xhr.response);
+
+                    $("#supportTable").accordion({
+                        header: "> div > h3",
+                        collapsible: true,
+                        heightStyle: "content",
+                        active: false
+                    });
+                }
+            }
+            xhr.open("POST", '/Report/EditSupport', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(body);
+        }
+    </script>
+
+    <script>
+        $('#WorkPermit').val("@Html.Raw(Model.WorkPermit)");
+        $('#substationType').val("@Html.Raw(Model.Substation.ToString().Substring(0, 2))");
+        $('#SubstationNumber').val("@Html.Raw(Model.Substation.ToString().Substring(3))");
+        $('#Fider').val("@Html.Raw(Model.Fider)");
+        $('#Local').val("@Html.Raw(Model.Local)");
+        var brigade = "@Html.Raw(Model.Brigade)".split('$');
+        for (i = 0; i < brigade.length; i++) {
+            if (i >1)
+                addField(i + 1);
+            $("#Brigade" + (i + 1)).val(brigade[i]);
+        }
+        function addField(x) {
+            $('#brigadeRow').append('<div class="col-md-3 mb-3" id="BrigadeElement' + x + '"> <label for= "Brigade' + x + '"> Работник ' + x + '</label>  <input type="text" class="form-control" form="form1" id="Brigade' + x + '" name="Brigade' + x + '" required pattern="[А-Яа-я]+ [А-Яа-я]{1}\.[А-Яа-я]{1}\." /></div>'); //add input box
+        }
+
+        $('#addPLSbtn').click(function (e) { //Добавление опоры
+            e.preventDefault();
+            $("#supportAddForm").validate();
+            if ($("#supportAddForm").valid()) {
+                var xhr = new XMLHttpRequest();
+                var body = "supportNumber=" + encodeURIComponent($('#SupportNumber').val()) + "&powerLineType=" + encodeURIComponent($('#PowerLineType').val())
+                    + "&fixatorsCount=" + encodeURIComponent($('#FixatorsCount').val()) + "&reportId=" + encodeURIComponent(@Model.Id);
+
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        $('#supportTable').replaceWith(xhr.response);
+
+                        $("#supportTable").accordion({
+                            header: "> div > h3",
+                            collapsible: true,
+                            heightStyle: "content",
+                            active: false
+                        });
+
+
+                    }
+                }
+                xhr.open("POST", '/Report/AddSupport', true);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.send(body);
+            }
+        });
+
+        function DeletePowerLineSupport(id) {
+            var xhr = new XMLHttpRequest();
+            var body = "supportNumber=" + encodeURIComponent(id);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        $('#supportTable').replaceWith(xhr.response);
+
+                        $("#supportTable").accordion({
+                            header: "> div > h3",
+                            collapsible: true,
+                            heightStyle: "content",
+                            active: false
+                        });
+                    }
+                }
+            xhr.open("POST", '/Report/DeleteSupport', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(body);
+        }
+
+        $('#kdeAddBtn').click(function (e) { //Добавление КДЕ на опору
+        e.preventDefault();
+        var xhr = new XMLHttpRequest();
+        var body = "supportNumber=" + encodeURIComponent($('#PowerLineSupportId').val()) + "&kdeType=" + encodeURIComponent($('#KDEType').val());
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#addKDE').modal('toggle');
+                $('#Support_' + $('#PowerLineSupportId').val()).append(xhr.response);
+            }
+        }
+        xhr.open("POST", '/Report/AddKde', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    });
+
+        function DeleteKde(id) {
+        var xhr = new XMLHttpRequest();
+        var body = "kdeId=" + encodeURIComponent(id);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                if (xhr.responseText.length > 0) {
+                    alert(xhr.responseText);
+                }
+                else {
+                    var kde = $('#kde_' + id);
+                    kde.remove();
+                }
+
+            }
+        }
+        xhr.open("POST", '/Report/DeleteKde', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+        function DeletePu(id, kdeId) {
+        var xhr = new XMLHttpRequest();
+        var body = "id=" + encodeURIComponent(id);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#puTable_' + kdeId).html(xhr.response);
+            }
+        }
+        xhr.open("POST", '/Report/DeleteALPU', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+        function CheckDevice() {//Проверка возможности добавить ПУ в отчет
+            var serial = document.getElementById("Serial").value.toString();
+            var xhr = new XMLHttpRequest();
+            var body = "serialNumber=" + encodeURIComponent(serial) + "&contractId=" + encodeURIComponent(@ViewBag.Contract.Id);
+            xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200 && xhr.responseText.length > 0) {
+                $('#Serial').val('');
+                $('#sim').hide();
+                $("#PhoneNumber").prop('required', false);
+                $("#PhoneNumber").val('');
+                alert(xhr.responseText);
+            }
+            else {
+                if ($('#Serial').val().startsWith("011889") || $('#Serial').val().startsWith("012095") || $('#Serial').val().startsWith("012099")) {
+                    $('#sim').show();
+                    $("#PhoneNumber").prop('required', true);
+                }
+                else {
+                    $('#sim').hide();
+                    $("#PhoneNumber").prop('required', false);
+                    $("#PhoneNumber").val('');
+                }
+            }
+        }
+
+            xhr.open("POST", '/Report/CheckDevice', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(body);
+        }
+
+        function CheckKDE(id) {//Проверка возможности добавить ПУ в КДЕ
+
+        var xhr = new XMLHttpRequest();
+        var body = "kdeId=" + encodeURIComponent(id);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                if (xhr.responseText.length > 0)
+                    alert(xhr.responseText);
+                else
+                    $('#addPU').modal('toggle');
+            }
+        }
+
+        xhr.open("POST", '/Report/CheckKDE', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+        function SendReport(reportId) {
+        $('#sendToCurator').modal('toggle');
+        var xhr = new XMLHttpRequest();
+        var body = "id=" + encodeURIComponent(reportId) + "&curatorId=" + encodeURIComponent($('#UserId').val());
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                alert(xhr.responseText);
+            }
+        }
+
+        xhr.open("POST", '/Report/SendAlReport', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+        }
+
+        function AddAdditionalMaterialOpenModal(deviceItemId, kdeId) {
+            $('#addMaterial').modal("toggle");
+            $('#AdditionalMaterialDeviceId').val(deviceItemId);
+            $('#AdditionalMaterialKDEId').val(kdeId);
+
+        }
+
+        function AddAdditionalMaterial() {
+            var xhr = new XMLHttpRequest();
+            var materialId = $('#MaterialId').val();
+            var volume = $('#MaterialVolume').val();
+            var kdeId = $('#AdditionalMaterialKDEId').val();
+            var body = "deviceItemId=" + encodeURIComponent($('#AdditionalMaterialDeviceId').val()) + "&materialId=" + encodeURIComponent(materialId) + "&volume=" + encodeURIComponent(volume);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    $('#addMaterial').modal("toggle");
+                    $('#kde_' + kdeId.toString()).html(xhr.response);
+                }
+            }
+            xhr.open("POST", '/Report/AddAdditionalMaterial', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(body);
+        }
+
+        function DeleteAdditionalMaterial(materialId, KDEId) {
+            var xhr = new XMLHttpRequest();
+            var body = "id=" + encodeURIComponent(materialId) + "&kdeId=" + encodeURIComponent(KDEId);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    $('#kde_' + KDEId).html(xhr.response);
+                }
+            }
+            xhr.open("POST", '/Report/DeleteAdditionalMaterial', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(body);
+        }
+
+        function Addcoment(reportId, reportType) {
+            var xhr = new XMLHttpRequest();
+            var text = $('#text').val();
+            var body = "reportId=" + encodeURIComponent(reportId) + "&reportType=" + encodeURIComponent(reportType) + "&text=" + encodeURIComponent(text);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    $('#commentsTable').html(xhr.response);
+                    $('#text').val('');
+                    //$("#commentsAccordion").accordion({
+                    //    collapsible: true,
+                    //    heightStyle: "content",
+                    //    active: false
+                    //});
+
+                }
+            }
+            xhr.open("POST", '/Report/AddComment', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(body);
+        }
+
+        function EditPU(id) {
+            var xhr = new XMLHttpRequest();
+           
+            var body = "id=" + encodeURIComponent(id);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var result = JSON.parse(xhr.responseText);
+
+                    if (result.Serial.startsWith("011889") || result.Serial.startsWith("012095") || result.Serial.startsWith("012099")) {
+                        $('#simE').show();
+                        $("#PhoneNumberE").prop('required', true);
+                    }
+                    else {
+                        $('#simE').hide();
+                        $("#PhoneNumberE").prop('required', false);
+                        $("#PhoneNumberE").val('');
+                    }
+
+                    $('#StreetE').val(result.Street);
+                    $('#HouseE').val(result.House);
+                    $('#BuildingE').val(result.Building);
+                    $('#FlatE').val(result.Flat);
+                    $('#SerialE').val(result.Serial);
+                    $('#DeviceSealE').val(result.DeviceSeal);
+                    $('#InstallPlaceE').val(result.InstallPlace);
+                    $('#SumE').val(result.Sum);
+                    $('#T1E').val(result.T1);
+                    $('#T2E').val(result.T2);
+                    $('#U1E').val(result.U1);
+                    $('#U2E').val(result.U2);
+                    $('#U3E').val(result.U3);
+                    $('#UpDownWireE').val(result.WireConsumptionUpDown);
+                    $('#NewWireE').val(result.WireConsumptionNewInput);
+                    $('#KDESealE').val(result.KDESeal);
+                    $('#SwitchSealE').val(result.SwitchSeal);
+                    $('#PowerLineTypeE').val(result.PowerLineType);
+                    $("#PhoneNumberE").val(result.PhoneNumber);
+                    $('#EditPU').modal('toggle');
+
+
+                }
+            }
+            xhr.open("POST", '/Report/EditALPU', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(body);
+        }
+
+    </script>
+}

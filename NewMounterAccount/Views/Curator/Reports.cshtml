@@ -1,0 +1,239 @@
+﻿@using DbManager;
+@using NewMounterAccount.Models;
+
+
+@{
+    ViewData["Title"] = "NewReport";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+<h2>Отчеты монтажника (@ViewBag.WorkerName)</h2>
+
+
+<div style="height:10px"></div>
+
+<div class="card">
+    <div class="card-header">
+        <h5> Отчеты на проверку</h5>
+    </div>
+    <div id="reportsAccordion">
+        @{
+            List<ReportItem> reports = ViewBag.ALReports;
+            if (reports.Count > 0)
+            {
+                <h3>
+                    Отчеты по ВЛ
+                    <span class="button-icon-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </span>
+                </h3>
+            }
+            else
+            {
+                <h3>Отчеты по ВЛ</h3>
+            }
+        }
+        <div id="reportsAL">
+            @await Html.PartialAsync("~/Views/Report/CuratorReportItem.cshtml", reports)
+        </div>
+
+        @{
+            reports = ViewBag.SBReports;
+            if (reports.Count > 0)
+            {
+                <h3>
+                    Отчеты по ТП/РП
+                    <span class="button-icon-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </span>
+                </h3>
+            }
+            else
+            {
+                <h3>Отчеты по ТП/РП</h3>
+            }
+        }
+
+        <div id="reportsSB">
+            @await Html.PartialAsync("~/Views/Report/CuratorReportItem.cshtml", reports)
+        </div>
+        @{
+            reports = ViewBag.USPDReports;
+            if (reports.Count > 0)
+            {
+                <h3>
+                    Отчеты по УСПД
+                    <span class="button-icon-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </span>
+                </h3>
+            }
+            else
+            {
+                <h3>Отчеты по УСПД</h3>
+            }
+        }
+        <div>
+            @await Html.PartialAsync("~/Views/Report/CuratorReportItem.cshtml", reports)
+        </div>
+
+        @{
+            reports = ViewBag.UnmountReports;
+            if (reports.Count > 0)
+            {
+                <h3>
+                    Отчеты по Демонтажу
+                    <span class="button-icon-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </span>
+                </h3>
+            }
+            else
+            {
+                <h3>Отчеты по Демонтажу</h3>
+            }
+        }
+        <div>
+            @await Html.PartialAsync("~/Views/Report/CuratorReportItem.cshtml", reports)
+        </div>
+
+    </div>
+</div>
+<div style="height:10px"></div>
+<div class="card">
+    <div class="card-header">
+        <h5> Принятые отчеты</h5>
+    </div>
+    <div id="acceptedReportsAccordion">
+        <h3>Отчеты по ВЛ</h3>
+        <div id="reportsAL">
+            @{
+                reports = (List<ReportItem>)ViewBag.AcceptedALReports;
+            }
+            @await Html.PartialAsync("~/Views/Report/CuratorReportItem.cshtml", reports)
+        </div>
+        <h3>Отчеты по ТП/РП</h3>
+        <div>
+            @{
+                reports = (List<ReportItem>)ViewBag.AcceptedSBReports;
+            }
+            @await Html.PartialAsync("~/Views/Report/CuratorReportItem.cshtml", reports)
+        </div>
+        <h3>Отчеты по УСПД</h3>
+        <div>
+            @{
+                reports = (List<ReportItem>)ViewBag.AcceptedUSPDReports;
+            }
+            @await Html.PartialAsync("~/Views/Report/CuratorReportItem.cshtml", reports)
+        </div>
+        <h3>Отчеты по Демонтажу</h3>
+        <div>
+            @{
+                reports = (List<ReportItem>)ViewBag.AcceptedUnmountReports;
+            }
+            @await Html.PartialAsync("~/Views/Report/CuratorReportItem.cshtml", reports)
+        </div>
+
+    </div>
+</div>
+
+
+<div class="modal fade" id="addRemark" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Замечания по отчету</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="comment">Замечания:</label>
+                    <textarea class="form-control" rows="3" id="text"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <input type="hidden" id="reportType" />
+                <input type="hidden" id="reportId" />
+                <button type="submit" class="btn btn-primary" id="remarkAddBtn" onclick="AddRemark()">Отправить</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+    function Val(id, type) {
+        $('#reportType').val(type);
+        $('#reportId').val(id);
+    }
+
+    function AddRemark() {
+        if ($('#text').val() === "") {
+            alert("Текст замечания не может быть пустым!");
+        }
+        else {
+            $('#addRemark').modal('toggle');
+            var xhr = new XMLHttpRequest();
+            var body = "reportId=" + encodeURIComponent($('#reportId').val()) + "&reportType=" + encodeURIComponent($('#reportType').val()) + "&text=" + encodeURIComponent($('#text').val());
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    alert(xhr.responseText);
+                    window.location.reload(true);
+                }
+            }
+            xhr.open("POST", '/Curator/AddRemarkToReport', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(body);
+        }
+    }
+
+    $(function () {
+        $("#reportsAccordion").accordion({
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+
+        $("#acceptedReportsAccordion").accordion({
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+    });
+    function AcceptConfirmation(reportId, reportType) {
+        swal({
+            title: "Вы уверены?",
+            text: "После принятия отчета его невозможно будет измеить!",
+            icon: "warning",
+            buttons: ["Отмена", "Ок"],
+            dangerMode: true,
+        })
+            .then((willAccept) => {
+                if (willAccept) {
+                    var xhr = new XMLHttpRequest();
+                    var body = "type=" + encodeURIComponent(reportType) + "&id=" + encodeURIComponent(reportId);
+                    xhr.onreadystatechange = function () {
+                        if (xhr.readyState === 4 && xhr.status === 200) {
+                            swal("Отчет принят", {
+                                icon: "success",
+                            })
+                                .then(() => {
+                                    window.location.reload(true);
+                                });
+                           
+                        }
+                    }
+                    xhr.open("POST", '/Curator/AcceptReport', true);
+                    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                    xhr.send(body);
+      
+                }
+                else {
+                    swal("Отчет не принят!");
+                }
+            });
+    }
+</script>

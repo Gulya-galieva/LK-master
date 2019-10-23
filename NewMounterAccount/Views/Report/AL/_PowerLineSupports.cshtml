@@ -1,0 +1,39 @@
+﻿@model IEnumerable<DbManager.PowerLineSupport>
+@{
+    bool mounter = User.IsInRole("mounter");
+}
+<div class="card-body" id="supportTable">
+    @foreach (var support in Model)
+     {
+        <div>
+            <h3>Опора №@support.SupportNumber, тип основной магистрали: @support.PowerLineType, кол-во дист. фиксаторов: @support.FixatorsCount</h3>
+            <div>
+                @if (mounter)
+                {
+                    <div class="d-flex">
+                        <div class="ml-auto p-2">
+                            <button class="btn btn-outline-success" onmouseover="PowerLineId(@support.Id)" data-toggle="modal" data-target="#addKDE">Добавить КДЕ</button>
+                        </div>
+                        <div class="p-2">
+                            <button class="btn btn-outline-primary" onclick="OpenEditPowerLineSupportEditor(@support.SupportNumber, '@Html.Raw(support.PowerLineType)', @support.FixatorsCount, @support.Id)">
+                                <span class="button-icon">
+                                    <i class="fas fa-wrench"></i>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="p-2">
+                            <button class="btn btn-outline-danger" onclick="DeletePowerLineSupport(@support.Id)">-</button>
+                        </div>
+                    </div>
+                }
+                <div id="Support_@support.Id">
+
+                    @foreach (DbManager.KDE kde in support.KDEs)
+                    {
+                        @await Html.PartialAsync("~/Views/Report/AL/_KDE.cshtml", kde)
+                    }
+                </div>
+            </div>
+        </div>
+     }
+</div>

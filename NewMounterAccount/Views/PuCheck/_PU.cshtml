@@ -1,0 +1,40 @@
+﻿@foreach (NewMounterAccount.Models.PUCheckModel device in Model)
+{
+    <div class="alert alert-secondary">
+        <div class="row">
+            <div class="col-4">
+                <p>Ул. @device.Adress.Street, д. @device.Adress.House, корп. @device.Adress.Building, кв. @device.Adress.Flat</p>
+                <ul>
+                    <li>@device.Device.Serial</li>
+                </ul>
+            </div>
+            <div class="col-3">
+                <div class="text-center">
+                    @if (device.Device.Result == "НП")
+                    {
+                        <span style="font-size:52px; color:red">
+                            @device.Device.Result!
+                        </span>
+                    }
+                    @if (device.Device.Result == "БСВ")
+                    {
+                        <span style="font-size:52px; color:green">
+                            @device.Device.Result
+                        </span>
+                    }
+                </div>
+            </div>
+            <div class="col-5">
+                <div class="d-flex">
+                    <div class="ml-auto">
+                        @if (User.IsInRole("engineer") || User.IsInRole("administrator") || User.IsInRole("curator"))
+                        {
+                            <button class="btn btn-outline-primary" onclick="OpenDeviceForEdit(@device.Device.Id)">Редактировать</button>
+                            <button class="btn btn-outline-danger" onclick="DeleteDevice(@device.Device.Id)">Удалить</button>
+                        }
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,192 @@
+﻿@using DbManager;
+@using NewMounterAccount.Models;
+
+
+@{
+    ViewData["Title"] = "NewReport";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h2>Создание нового отчета (Договор: @ViewBag.Contract.Name)</h2>
+<form action="/Report/NewReport" method="post">
+    <div class="row">
+        <div class="col-md-10 mb-3">
+            <label for="NetRegionID">Выберите РЭС</label>
+            @Html.DropDownList("NetRegionID", ViewBag.NetRegions as SelectList, new { @class = "form-control", @autocomplete = "on", @required = "true" })
+        </div>
+        <div class="col-md-2 mb-3">
+            <label for="ReportType">Тип отчета</label>
+            <select id="ReportType" name="ReportType" class="form-control">
+                <option value="ВЛ">ВЛ</option>
+                <option value="ТП/РП">ТП/РП</option>
+                <option value="УСПД">УСПД</option>
+                <option value="Демонтаж">Демонтаж</option>
+            </select>
+        </div>
+    </div>
+    <div class="text-right">
+        <input type="hidden" id="ContractId" name="ContractId" value="@ViewBag.Contract.Id" />
+        <input id="post" type="submit" value="Создать" class="btn btn-primary" />
+    </div>
+</form>
+
+<div style="height:10px"></div>
+
+<div class="card">
+    <div class="card-header">
+        <h5> Отчеты в работе</h5>
+    </div>
+    <div id="reportsAccordion">
+        <h3>Отчеты по ВЛ</h3>
+        <div id="reportsAL">
+            @{
+                List<ReportItem> alReports = ViewBag.ALReports;
+            }
+            @await Html.PartialAsync("~/Views/Report/ReportItem.cshtml", alReports)
+        </div>
+        <h3>Отчеты по ТП/РП</h3>
+        <div id="reportsSB">
+            @{
+                List<ReportItem> sbReports = ViewBag.SBReports;
+            }
+            @await Html.PartialAsync("~/Views/Report/ReportItem.cshtml", sbReports)
+        </div>
+        <h3>Отчеты по УСПД</h3>
+        <div>
+            @{
+                List<ReportItem> UspdReports = ViewBag.USPDReports;
+            }
+            @await Html.PartialAsync("~/Views/Report/ReportItem.cshtml", UspdReports)
+        </div>
+        <h3>Отчеты по Демонтажу</h3>
+        <div>
+            @{
+                List<ReportItem> UnmountReports = ViewBag.UnmountReports;
+            }
+            @await Html.PartialAsync("~/Views/Report/ReportItem.cshtml", UnmountReports)
+        </div>
+    </div>
+</div>
+<div style="height:10px"></div>
+<div class="card">
+    <div class="card-header">
+        <h5> Принятые отчеты</h5>
+    </div>
+    <div id="acceptedReportsAccordion">
+        <h3>Отчеты по ВЛ</h3>
+        <div id="reportsAL">
+            @{
+                alReports = ViewBag.ALAcceptedReports;
+            }
+            @await Html.PartialAsync("~/Views/Report/ReportItem.cshtml", alReports)
+        </div>
+        <h3>Отчеты по ТП/РП</h3>
+        <div>
+            @{
+                sbReports = ViewBag.SBAcceptedReports;
+            }
+            @await Html.PartialAsync("~/Views/Report/ReportItem.cshtml", sbReports)
+        </div>
+        <h3>Отчеты по УСПД</h3>
+        <div>
+            @{
+                UspdReports = ViewBag.USPDAcceptedReports;
+            }
+            @await Html.PartialAsync("~/Views/Report/ReportItem.cshtml", UspdReports)
+        </div>
+        <h3>Отчеты по демонтажу</h3>
+        <div>
+            @{
+                UnmountReports = ViewBag.UnmountAcceptedReports;
+            }
+            @await Html.PartialAsync("~/Views/Report/ReportItem.cshtml", UnmountReports)
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        $("#reportsAccordion").accordion({
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+
+        $("#acceptedReportsAccordion").accordion({
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+    });
+
+    function DeleteSBReport(id) {//Удаление SB отчета
+        var xhr = new XMLHttpRequest();
+        var body = "id=" + encodeURIComponent(id);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200 && xhr.responseText.length === 0) {
+                var report = $('#SB' + id);
+                report.remove();
+            }
+            else {
+                if (xhr.responseText.length > 0)
+                    alert(xhr.responseText);
+            }
+        }
+        xhr.open("POST", '/Report/DeleteSBReport', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function DeleteUSPDReport(id) {//Удаление USPD отчета
+        var xhr = new XMLHttpRequest();
+        var body = "id=" + encodeURIComponent(id);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200 && xhr.responseText.length === 0) {
+                var report = $('#USPD' + id);
+                report.remove();
+            }
+            else {
+                if (xhr.responseText.length > 0)
+                    alert(xhr.responseText);
+            }
+        }
+        xhr.open("POST", '/Report/DeleteUSPDReport', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function DeleteALReport(id) {//Удаление отчета
+        var xhr = new XMLHttpRequest();
+        var body = "id=" + encodeURIComponent(id);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200 && xhr.responseText.length === 0) {
+                var report = $('#AL' + id)
+                report.remove();
+            }
+            else {
+                if (xhr.responseText.length >0)
+                    alert(xhr.responseText);
+            }
+        }
+        xhr.open("POST", '/Report/DeleteALReport', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function DeleteUnmountReport(id) {//Удаление отчета
+        var xhr = new XMLHttpRequest();
+        var body = "id=" + encodeURIComponent(id);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200 && xhr.responseText.length === 0) {
+                var report = $('#Unmount' + id)
+                report.remove();
+            }
+            else {
+                if (xhr.responseText.length > 0)
+                    alert(xhr.responseText);
+            }
+        }
+        xhr.open("POST", '/Report/DeleteUnmountReport', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+</script>

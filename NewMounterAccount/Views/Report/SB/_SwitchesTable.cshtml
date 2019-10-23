@@ -1,0 +1,27 @@
+﻿@model IEnumerable<DbManager.Switch>
+@{
+    bool mounter = User.IsInRole("mounter");
+}
+<div class="card-body" id="SwitchesTable">
+    @foreach (var _switch in Model)
+    {
+        <div id="switch_@_switch.Id">
+            <h3>@_switch.SwitchType №@_switch.SwitchNumber</h3>
+            <div>
+                <h6 style="color:red">@ViewData["error"]</h6>
+                <div class="d-flex">
+                    <div class="pl-5">
+                        <p>ПУ №@_switch.DeviceSerial, ТТ ф.А @_switch.TTAk/5, ТТ ф.B @_switch.TTBk/5, ТТ ф.С @_switch.TTCk/5</p>
+                    </div>
+                    @if (mounter)
+                    {
+                        <div class="ml-auto p-2">
+                            <button class="btn btn-outline-danger" onclick="DeleteSwitch(@_switch.Id)">-</button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+

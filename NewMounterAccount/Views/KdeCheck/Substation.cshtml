@@ -1,0 +1,558 @@
+﻿@model ChekDbManager.CheckDataContext.Substation
+@{
+    ViewData["Title"] = "Substation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>@Model.Name, @Model.NetRegion.Name</h2>
+
+<div class="fixed-table" id="SubStat">
+    @await Html.PartialAsync("_substationStat", (NewMounterAccount.Models.SubstationStat)ViewBag.SubStat)
+</div>
+
+@if (User.IsInRole("engineer") || User.IsInRole("administrator") || User.IsInRole("curator"))
+{
+    <div id="accordion">
+        <h3>Последние действия</h3>
+        <div>
+            @foreach (NewMounterAccount.Models.Action action in ViewBag.Actions)
+            {
+                <p>@action.DateTime: @action.Name @action.ActionDone @action.Comment</p>
+            }
+        </div>
+    </div>
+}
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex">
+            <div class="mt-2">
+                Список КДЕ
+            </div>
+            <div class="ml-auto">
+                @if (User.IsInRole("mounter") || User.IsInRole("engineer") || User.IsInRole("administrator"))
+                {
+                    <button class="btn btn-outline-success" data-toggle="modal" data-target="#addKDE">
+                        Добавить КДЕ
+                    </button>
+                }
+            </div>
+            <div class="ml-1">
+                @if (User.IsInRole("mounter") || User.IsInRole("engineer") || User.IsInRole("administrator"))
+                {
+                    <input type="number" min="1" max="50" class="form-control" value="1" onchange="CopyCountReverse()" id="kdeCount" style="width:70px"/>
+                  
+                }
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div id="kdeTable">
+            @await Html.PartialAsync("_kdes", (IEnumerable<ChekDbManager.CheckDataContext.Kde>)ViewBag.Kdes)
+        </div>
+        <div class="d-flex">
+            <div class="ml-auto">
+                @if (User.IsInRole("mounter") || User.IsInRole("engineer") || User.IsInRole("administrator"))
+                {
+                    <button class="btn btn-outline-success" data-toggle="modal" data-target="#addKDE">
+                        Добавить КДЕ
+                    </button>
+                }
+            </div>
+            <div class="ml-1">
+                @if (User.IsInRole("mounter") || User.IsInRole("engineer") || User.IsInRole("administrator"))
+                {
+                    <input type="number" min="1" max="50" class="form-control" value="1" id="kdeCount1" onchange="CopyCount()" style="width:70px"/>
+
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добаления КДЕ -->
+<div class="modal fade" id="addKDE" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Добавление КДЕ</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-row">
+                    <label for="KdeTypeId">Тип КДЕ</label>
+                    @Html.DropDownList("KdeTypeId", ViewBag.KdeTypes as SelectList, new { @class = "form-control", @autocomplete = "on", @required = "true" })
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="AddKde()">Добавить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добаления потребителя -->
+<div class="modal fade" id="addPU" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Добавление потребителя</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addPu1">
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label for="Local">Населеный пункт</label>
+                            <input type="text" class="form-control" id="Local" name="Local" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-3">
+                            <label for="Street">Улица</label>
+                            <input type="text" class="form-control" id="Street" name="Street" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="House">Дом</label>
+                            <input type="text" class="form-control" autocomplete="off" id="House" name="House" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="Building">Корпус</label>
+                            <input type="text" class="form-control" autocomplete="off" id="Building" name="Building">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="Flat">Квартира</label>
+                            <input type="text" class="form-control" autocomplete="off" id="Flat" name="Flat">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label for="Comment">Комментарий</label>
+                            <input type="text" class="form-control" autocomplete="off" id="Comment" name="Comment">
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <input type="hidden" id="kdeID1" name="KdeId" form="addPu1" />
+                <button class="btn btn-primary" onclick="AddOneAdress()">Добавить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добаления потребителя 2 -->
+<div class="modal fade" id="addPU2" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Добавление потребителя</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="addPU2">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label for="Local">Населеный пункт</label>
+                            <input type="text" class="form-control" id="Local" name="Local" required>
+                        </div>
+                    </div>
+                    <div role="separator" class="dropdown-divider"></div>
+                    <div class="form-row">
+                        <div class="col-md-3">
+                            <label for="Street">Улица [1]</label>
+                            <input type="text" class="form-control street1" autocomplete="on" id="Street" onchange="CopyAdress()" onkeyup="CopyAdress()" name="Street" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="House">Дом [1]</label>
+                            <input type="text" class="form-control" autocomplete="off" id="House" name="House" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="Building">Корпус [1]</label>
+                            <input type="text" class="form-control" autocomplete="off" id="Building" name="Building">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="Flat">Квартира [1]</label>
+                            <input type="text" class="form-control" autocomplete="off" id="Flat" name="Flat">
+                        </div>
+                    </div>
+                    <div role="separator" class="dropdown-divider"></div>
+                    <div class="form-row">
+                        <div class="col-md-3">
+                            <label for="Street">Улица [2]</label>
+                            <input type="text" class="form-control" autocomplete="on" id="Street2" name="Street2" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="House">Дом [2]</label>
+                            <input type="text" class="form-control" autocomplete="off" id="House2" name="House2" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="Building">Корпус  [2]</label>
+                            <input type="text" class="form-control" id="Building2" autocomplete="off" name="Building2">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="Flat">Квартира [2]</label>
+                            <input type="text" class="form-control" id="Flat2" autocomplete="off" name="Flat2">
+                        </div>
+                    </div>
+                    <div role="separator" class="dropdown-divider"></div>
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label for="Comment">Комментарий</label>
+                            <input type="text" class="form-control" autocomplete="off" id="Comment" name="Comment">
+                            <input type="hidden" id="kdeID2" name="KdeId" />
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer">
+
+                <button type="submit" class="btn btn-primary" onclick="AddTwoAdresses()">Добавить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования потребителя -->
+<div class="modal fade" id="editPU" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Редактирвание потребителя</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editPu1">
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label for="Local">Населеный пункт</label>
+                            <input type="text" class="form-control" id="ELocal" name="Local" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-3">
+                            <label for="Street">Улица</label>
+                            <input type="text" class="form-control" id="EStreet" name="Street" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="House">Дом</label>
+                            <input type="text" class="form-control" autocomplete="off" id="EHouse" name="House" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="Building">Корпус</label>
+                            <input type="text" class="form-control" autocomplete="off" id="EBuilding" name="Building">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="Flat">Квартира</label>
+                            <input type="text" class="form-control" autocomplete="off" id="EFlat" name="Flat">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label for="Comment">Комментарий</label>
+                            <input type="text" class="form-control" autocomplete="off" id="EComment" name="Comment">
+                            <input type="hidden" id="EadrId" name="Id" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <input type="hidden" id="kdeID1" name="KdeId" form="addPu1" />
+                
+                <button class="btn btn-primary" onclick="EditOneAdress()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования потребителя 2 -->
+<div class="modal fade" id="editPU2" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Редактирвание потребителя</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="editPU2">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label for="Local">Населеный пункт</label>
+                            <input type="text" class="form-control" id="ELocal1" name="Local" required>
+                        </div>
+                    </div>
+                    <div role="separator" class="dropdown-divider"></div>
+                    <div class="form-row">
+                        <div class="col-md-3">
+                            <label for="Street">Улица [1]</label>
+                            <input type="text" class="form-control street1" autocomplete="on" id="EStreet1"  name="Street" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="House">Дом [1]</label>
+                            <input type="text" class="form-control" autocomplete="off" id="EHouse1" name="House" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="Building">Корпус [1]</label>
+                            <input type="text" class="form-control" autocomplete="off" id="EBuilding1" name="Building">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="Flat">Квартира [1]</label>
+                            <input type="text" class="form-control" autocomplete="off" id="EFlat1" name="Flat">
+                        </div>
+                    </div>
+                    <div role="separator" class="dropdown-divider"></div>
+                    <div class="form-row">
+                        <div class="col-md-3">
+                            <label for="Street">Улица [2]</label>
+                            <input type="text" class="form-control" autocomplete="on" id="EStreet2" name="Street2" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="House">Дом [2]</label>
+                            <input type="text" class="form-control" autocomplete="off" id="EHouse2" name="House2" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="Building">Корпус  [2]</label>
+                            <input type="text" class="form-control" id="EBuilding2" autocomplete="off" name="Building2">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="Flat">Квартира [2]</label>
+                            <input type="text" class="form-control" id="EFlat2" autocomplete="off" name="Flat2">
+                        </div>
+                    </div>
+                    <div role="separator" class="dropdown-divider"></div>
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label for="Comment">Комментарий</label>
+                            <input type="text" class="form-control" autocomplete="off" id="EComment1" name="Comment">
+                            <input type="hidden" id="EaddId1" name="Id" />
+                            <input type="hidden" id="EaddId2" name="Id2" />
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onclick="EditTwoAdresses()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $("#accordion").accordion({
+        collapsible: true,
+        heightStyle: "content",
+        active: false
+    });
+
+    function OpenModal(kdeType, kdeId) {
+        var xhr = new XMLHttpRequest();
+        var body = "kdeId=" + encodeURIComponent(kdeId);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200 && xhr.responseText.length > 0) {
+                alert(xhr.responseText);
+            }
+            if (xhr.readyState === 4 && xhr.status === 200 && xhr.responseText.length === 0) {
+                if (kdeType.toString() === "КДЕ-3-2") {
+                    $('#kdeID2').val(kdeId);
+                    $('#addPU2').modal('toggle');
+                }
+
+                else {
+                    $('#kdeID1').val(kdeId);
+                    $('#addPU').modal('toggle');
+                }
+            }
+        }
+        xhr.open("POST", '/KdeCheck/CheckKde', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function AddKde() {
+        var xhr = new XMLHttpRequest();
+        var body = "substationId=" + encodeURIComponent(@Model.Id) + "&kdeTypeId=" + encodeURIComponent($('#KdeTypeId').val()) + "&count=" + encodeURIComponent($('#kdeCount').val());
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#addKDE').modal('toggle');
+                $('#kdeTable').html(xhr.response);
+                GetSubstationStat();
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+        }
+        xhr.open("POST", '/KdeCheck/AddKde', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function DeleteKde(kdeId) {
+        var xhr = new XMLHttpRequest();
+        var body = "kdeId=" + encodeURIComponent(kdeId);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#kdeTable').html(xhr.response);
+                GetSubstationStat();
+            }
+        }
+        xhr.open("POST", '/KdeCheck/DeleteKde', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function AddOneAdress() {
+        var formData = new FormData(document.forms.addPu1)
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#kdeTable').html(xhr.response);
+                $('#addPU').modal('toggle');
+
+
+            }
+        }
+        xhr.open("POST", '/KdeCheck/Add1PU', true);
+        xhr.send(formData);
+    }
+
+    function AddTwoAdresses() {
+        var formData = new FormData(document.forms.addPU2)
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#kdeTable').html(xhr.response);
+                $('#addPU2').modal('toggle');
+            }
+        }
+        xhr.open("POST", '/KdeCheck/Add2PU', true);
+        xhr.send(formData);
+    }
+
+    function GetSubstationStat() {
+        var xhr = new XMLHttpRequest();
+        var body = "id=" + encodeURIComponent(@Model.Id);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#SubStat').html(xhr.response);
+            }
+        }
+        xhr.open("POST", '/KdeCheck/GetSubstationStat', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send(body);
+    }
+
+    function EditKde(kdeType, kdeId) {
+        if (kdeType.toString() === "КДЕ-3-2") {
+            var xhr = new XMLHttpRequest();
+            var body = "kdeId=" + encodeURIComponent(kdeId);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var result = JSON.parse(xhr.responseText);
+                    $("#ELocal1").val(result.Local);
+                    $("#EComment1").val(result.Comment);
+
+                    $("#EStreet1").val(result.Street);
+                    $("#EHouse1").val(result.House);
+                    $("#EBuilding1").val(result.Building);
+                    $("#EFlat1").val(result.Flat);
+                    $("#EaddId1").val(result.Id);
+
+                    $("#EStreet2").val(result.Street2);
+                    $("#EHouse2").val(result.House2);
+                    $("#EBuilding2").val(result.Building2);
+                    $("#EFlat2").val(result.Flat2);
+                    $("#EaddId2").val(result.Id2);
+                                        
+                    $('#editPU2').modal('toggle');
+                }
+            }
+            xhr.open("POST", '/KdeCheck/Open2PU', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(body);
+        }
+        
+        else {
+            var xhr = new XMLHttpRequest();
+            var body = "kdeId=" + encodeURIComponent(kdeId);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var result = JSON.parse(xhr.responseText);
+                    $("#ELocal").val(result.Local);
+                    $("#EStreet").val(result.Street);
+                    $("#EHouse").val(result.House);
+                    $("#EBuilding").val(result.Building);
+                    $("#EFlat").val(result.Flat);
+                    $("#EComment").val(result.Comment);
+                    $('#EadrId').val(result.Id);
+                    $('#kdeID1').val(kdeId);
+                    $('#editPU').modal('toggle');
+                    
+                }
+            }
+            xhr.open("POST", '/KdeCheck/Open1PU', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(body);
+        }
+    }
+
+    function EditOneAdress() {
+        var formData = new FormData(document.forms.editPu1)
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#kdeTable').html(xhr.response);
+                $('#editPU').modal('toggle');
+            }
+        }
+        xhr.open("POST", '/KdeCheck/Edit1PU', true);
+        xhr.send(formData);
+    }
+
+    function EditTwoAdresses() {
+        var formData = new FormData(document.forms.editPU2)
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                $('#kdeTable').html(xhr.response);
+                $('#editPU2').modal('toggle');
+            }
+        }
+        xhr.open("POST", '/KdeCheck/Edit2PU', true);
+        xhr.send(formData);
+    }
+
+    function ClearForms() {
+        $('#House').val('');
+        $('#Building').val('');
+        $('#Flat').val('');
+        $('#House2').val('');
+        $('#Building2').val('');
+        $('#Flat2').val('');
+        $('#Comment').val('');
+    }
+
+    function CopyCount() {
+        $('#kdeCount').val($('#kdeCount1').val());
+    }
+
+    function CopyCountReverse() {
+        $('#kdeCount1').val($('#kdeCount').val());
+    }
+
+    function CopyAdress() {
+        $('#Street2').val($('.street1').val());
+       
+    }
+</script>
+

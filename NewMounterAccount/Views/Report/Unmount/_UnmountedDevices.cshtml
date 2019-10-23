@@ -1,0 +1,51 @@
+﻿@model IEnumerable<NewMounterAccount.Models.UnmountedDeviceModel>
+
+<div class="card mt-3">
+    <div class="card-header">
+        <div class="d-flex">
+            <div class="mt-2">
+                Демонтированное оборудование
+            </div>
+            @if (!User.IsInRole("curator"))
+            {
+                <div class="ml-auto">
+                    <button class="btn btn-outline-success" data-toggle="modal" data-target="#addPU">
+                        Добавить
+                    </button>
+                </div>
+            }
+            </div>
+
+    </div>
+    <div class="card-body" id="deviceTable">
+        @foreach (var item in Model)
+        {
+            <div class="alert alert-secondary">
+                <div class="d-flex">
+                    <div class="mt-2">
+                        <p>@item.NetRegion @item.Substation @item.Serial @item.Reason</p>
+                    </div>
+                    @if (!User.IsInRole("curator"))
+                    {
+                        <div class="ml-auto">
+                            <button class="btn btn-danger" onclick="DeletePU(@item.Id)">Удалить</button>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+    </div>
+    @if (Model.Count() > 0 && !User.IsInRole("curator"))
+    {
+        <div class="card-footer">
+
+            <div class="d-flex">
+                <div class="ml-auto">
+                    <button class="btn btn-primary" data-toggle="modal" data-target="#sendToCurator">Отправить куратору</button>
+                </div>
+            </div>
+
+        </div>
+    }
+</div>

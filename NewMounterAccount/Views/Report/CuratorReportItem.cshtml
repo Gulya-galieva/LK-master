@@ -1,0 +1,62 @@
+﻿<div id="innerTable">
+    @foreach (NewMounterAccount.Models.ReportItem item in Model)
+    {
+
+            <div class="alert alert-secondary report-item"  onmouseover="Val(@item.Id, '@Html.Raw(item.Type)')" role="alert">
+                <div class="row">
+                    <div class="col-md-3">
+                        <h6>
+                            <span class="alert-icon">
+                                <i class="fas fa-file-invoice"></i>
+                            </span>
+                            <a href="/Report/OpenReport/?reportId=@item.Id&reportType=@item.Type" class="report-item">
+                                Отчет №@item.Id от @item.Date.ToShortDateString()
+                                </a>
+                        </h6>
+                    </div>
+                    <div class="col-md-2 ">
+                        @if (item.Type != "Демонтаж")
+                        {
+                           
+                        }
+                        else
+                        {
+                            <h6>@item.NetRegion @item.Substation</h6>
+                        }
+                    </div>
+                    <div class="col-md-2 ">
+                        <h6>Установлено: @item.Mounted</h6>
+                    </div>
+                    <div class="col-md-2 ">
+                        <h6>Привязано к ТУ: @item.Accepted</h6>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>Статус: @item.State</h6>
+                    </div>
+
+                </div>
+
+                <div class="d-flex flex-row-reverse">
+                    @if (item.State == "отправлен куратору")
+                    {
+                        <div class="p-2">
+                            <button type="submit" class="btn btn-outline-danger" data-toggle="modal" data-target="#addRemark">Замечания</button>
+                        </div>
+                        <div class="p-2">
+                            <button class="btn btn-outline-primary" onclick="AcceptConfirmation(@item.Id, '@item.Type')">Принять отчет</button>
+                            @*<form action="/Curator/AcceptReport" method="post">
+                                <input type="hidden" name="type" value="@item.Type" />
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <input type="submit" class="btn btn-outline-primary" value="Принять отчет" />
+                            </form>*@
+                        </div>
+                    }
+                    <div class="p-2">
+                        <a class="btn btn-outline-success" href="/Report/GenerateReport/?reportId=@item.Id&reportType=@item.Type">Excel</a>
+                    </div>
+
+                </div>
+            </div>
+    }
+</div>
+

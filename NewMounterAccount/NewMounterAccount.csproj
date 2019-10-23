@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.94.2" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="2.2.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.3" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\Files\Temp\" />
+    <Folder Include="wwwroot\Files\TMP\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ChekDbManager">
+      <HintPath>..\..\..\repos\ChekDbManager\ChekDbManager\bin\Debug\netcoreapp2.2\ChekDbManager.dll</HintPath>
+    </Reference>
+    <Reference Include="StoreDbManager">
+      <HintPath>..\..\StoreDBdManager-master\StoreDbManager\bin\Debug\netcoreapp2.2\StoreDbManager.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
