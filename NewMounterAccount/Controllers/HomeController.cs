@@ -532,12 +532,12 @@ namespace NewMounterAccount.Controllers
                         }
                     }
                 }
-                if (recived > 0 || acepted > 0)
-                {
+                //if (recived > 0 || acepted > 0)
+                //{
                     data.Add(new Models.MounterData { ContractName = contract.Name, Accepted = acepted, Recived = recived, ContractId = contract.Id });
                     recived = 0;
                     acepted = 0;
-                }
+                //}
             }
             return data;
         }
